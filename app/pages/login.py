@@ -3,7 +3,9 @@
 import streamlit as st
 import time
 from app.utils.login_utils import generate_qr_code, poll_qr_code
-from app.utils.daos.login_db import save_token
+from app.utils.daos.login_db import init_login_db, save_token
+
+init_login_db()
 
 
 def page_render():
@@ -11,9 +13,9 @@ def page_render():
 
     # 请求二维码
     try:
-        qr_url, qrcode_key = generate_qr_code()
+        img, qrcode_key = generate_qr_code()
         st.image(
-            f"https://api.qrserver.com/v1/create-qr-code/?data={qr_url}&size=200x200",
+            image=img,
             caption="请使用 Bilibili App 扫码登录",
         )
         st.write("正在等待扫码...")
@@ -30,7 +32,7 @@ def page_render():
                 st.success("登录成功！")
                 login_url = response_data["data"]["url"]
                 tokens = parse_login_url(login_url)
-                save_token("default_user", tokens["SESSDATA"], tokens["Expires"])
+                save_token(tokens["SESSDATA"], tokens["Expires"])
 
                 # 更新登录状态
                 st.session_state["logged_in"] = True
@@ -41,9 +43,11 @@ def page_render():
                 st.error("二维码已失效，请重新获取。")
                 break
 
-            time.sleep(2)  # 轮询间隔
+            time.sleep(10)  # 轮询间隔
     except Exception as e:
         st.error(f"登录失败：{e}")
+        st.write(e)
+        print(e)
 
 
 # 解析登录 URL，提取 Token

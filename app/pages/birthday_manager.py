@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from app.utils.daos.user_db import (
-    init_db,
+    init_user_db,
     fetch_users,
 )
 from app.utils.daos.reminder_db import (
@@ -13,10 +13,10 @@ from app.utils.daos.reminder_db import (
 
 # 初始化数据库
 init_reminder_db()
-init_db()
+init_user_db()
 
 
-def page_render():
+def page_render2():
     st.header("🎂 生日提醒", divider=True)
 
     # 功能 1：显示每日发送生日提醒的时间

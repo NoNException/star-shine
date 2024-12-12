@@ -4,7 +4,7 @@ from app.config import DATABASE_PATH
 
 
 # 初始化数据库
-def init_db():
+def init_user_db():
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("""

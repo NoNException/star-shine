@@ -1,4 +1,5 @@
 import sqlite3
+from typing import Tuple
 from app.config import DATABASE_PATH
 
 
@@ -7,9 +8,8 @@ def init_login_db():
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_tokens (
+        CREATE TABLE IF NOT EXISTS bilibili_token (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
             token TEXT NOT NULL,
             expires_at INTEGER NOT NULL  -- Unix 时间戳
         )
@@ -19,28 +19,30 @@ def init_login_db():
 
 
 # 保存用户 Token
-def save_token(user_id, token, expires_at):
+def save_token(token, expires_at):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO user_tokens (user_id, token, expires_at)
-        VALUES (?, ?, ?)
+        INSERT INTO bilibili_token (token, expires_at)
+        VALUES (?, ?)
     """,
-        (user_id, token, expires_at),
+        (token, expires_at),
     )
     conn.commit()
     conn.close()
 
 
 # 获取 Token
-def get_token(user_id):
+def get_token():
+    """获取用户的 Token :param user_id: 用户 Id"""
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT token, expires_at FROM user_tokens WHERE user_id = ? ORDER BY id DESC LIMIT 1",
-        (user_id,),
+        "SELECT token, expires_at FROM bilibili_token ORDER BY id DESC LIMIT 1"
     )
     result = cursor.fetchone()
     conn.close()
-    return result if result else (None, None)
+    if result:
+        return result[0], result[1]
+    return None, None

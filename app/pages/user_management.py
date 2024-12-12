@@ -4,17 +4,17 @@ import streamlit as st
 from app.utils.daos.user_db import (
     delete_user,
     fetch_users,
-    init_db,
+    init_user_db,
     insert_user,
     update_user,
 )
 from app.utils.daos.file_handler import read_uploaded_file
 
 # 初始化数据库
-init_db()
+init_user_db()
 
 
-def page_render():
+def page_render1():
     # 上传功能
 
     # 展示和编辑功能
