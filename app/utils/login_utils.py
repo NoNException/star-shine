@@ -77,4 +77,5 @@ def poll_qr_code(qrcode_key):
     url = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
     response = request_session.get(url, params={"qrcode_key": qrcode_key})
     response_data = response.json()
+
     return response_data

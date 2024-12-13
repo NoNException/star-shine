@@ -1,5 +1,6 @@
 # 搜码登录页面
 #
+from urllib.parse import quote
 import streamlit as st
 import time
 from app.utils.login_utils import generate_qr_code, poll_qr_code
@@ -32,11 +33,13 @@ def page_render():
                 st.success("登录成功！")
                 login_url = response_data["data"]["url"]
                 tokens = parse_login_url(login_url)
-                save_token(tokens["SESSDATA"], tokens["Expires"])
+                st.write(tokens)
+                session_data = quote(tokens["SESSDATA"])
+                save_token(session_data, tokens["Expires"])
 
                 # 更新登录状态
                 st.session_state["logged_in"] = True
-                st.session_state["user_token"] = tokens["SESSDATA"]
+                st.session_state["user_token"] = session_data
                 st.session_state["token_expires_at"] = tokens["Expires"]
                 st.rerun()
             elif status_code == 86038:  # 二维码失效
