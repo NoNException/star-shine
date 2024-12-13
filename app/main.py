@@ -7,7 +7,7 @@ from app.pages import birthday_manager
 
 # pages navigation
 pages = {
-    "系统管理": [
+    "Home Page": [
         st.Page(user_management.user_info_manager, title="😊舰长信息"),
         st.Page(birthday_manager.birthday_notify, title="🎂生日提醒"),
         st.Page(revenue_manager.revenue_lister, title="🎁直播收益"),

@@ -3,5 +3,5 @@
 
 ./data/user_data.db
 
-**/__pycache__/
-*/__pycache__
+__pycache__/
+*.py[cod]
