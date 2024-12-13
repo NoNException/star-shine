@@ -5,5 +5,5 @@ from app.utils.login_utils import require_login
 
 
 @require_login
-def page_render3():
+def revenue_lister():
     st.title("this is revenue demo. ")

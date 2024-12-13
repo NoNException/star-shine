@@ -8,9 +8,9 @@ from app.pages import birthday_manager
 # pages navigation
 pages = {
     "系统管理": [
-        st.Page(user_management.page_render1, title="😊舰长信息"),
-        st.Page(birthday_manager.page_render2, title="🎂生日提醒"),
-        st.Page(revenue_manager.page_render3, title="🎁直播收益"),
+        st.Page(user_management.user_info_manager, title="😊舰长信息"),
+        st.Page(birthday_manager.birthday_notify, title="🎂生日提醒"),
+        st.Page(revenue_manager.revenue_lister, title="🎁直播收益"),
     ]
 }
 pg = st.navigation(pages)

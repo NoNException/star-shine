@@ -14,7 +14,7 @@ from app.utils.daos.file_handler import read_uploaded_file
 init_user_db()
 
 
-def page_render1():
+def user_info_manager():
     # 上传功能
 
     # 展示和编辑功能

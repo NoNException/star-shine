@@ -31,6 +31,7 @@ class Dumper:
         self, cookies: dict, sleep=2, session: Optional[aiohttp.ClientSession] = None
     ):
         self.sleep = sleep
+        # userId
         self._uid = int(cookies["DedeUserID"])
         self._session = session or aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=15)
@@ -45,6 +46,10 @@ class Dumper:
         await self._session.close()
 
     async def _get_api(self, url, **kwargs):
+        """基础 API 调用
+        :param url: 请求的 url 路径
+        :param kwargs: 情况参数
+        return: iay"""
         if time.time() - self._last_request < self.sleep:
             await asyncio.sleep(self.sleep)
         self._last_request = time.time()
@@ -67,6 +72,11 @@ class Dumper:
         )
 
     async def _fetch_by_date(self, dt: datetime, paid_only=True):
+        """
+        按日期获取收益记录
+        :param dt: 日期
+        :param paid_only: 是否只查询类型
+        return:  查询到数据"""
         params = {
             "limit": 20,
             "coin_type": 1 if paid_only else 0,
@@ -93,6 +103,13 @@ class Dumper:
         return entries
 
     async def fetch_by_date(self, dt: datetime, paid_only=True, retries=5):
+        """按天获取数据
+        :param dt: 日期
+        :param paid_only: 是否已经支付
+        :param retries: 重试次数
+        return 获取到的数据
+        """
+
         for i in range(retries):
             try:
                 return await self._fetch_by_date(dt, paid_only=paid_only)
@@ -102,17 +119,26 @@ class Dumper:
         raise
 
     async def dump_by_date(self, dt: datetime, paid_only=True, use_cache=True):
-        """Dump transactions on date `dt` to raw json and excel spreadsheet"""
+        """Dump transactions on date `dt` to raw json and excel spreadsheet
+        :param df:
+        :param paid_only:
+        :param use_cache:
+        return entries 实体列表
+        """
+        # +free-parial
         suffix = ("" if paid_only else "+free") + ("-partial" if is_today(dt) else "")
+        # userId-date+free-parial
         basename = f"{self._uid}-{dt.strftime('%Y%m%d')}{suffix}"
         use_cache = use_cache and not is_today(dt)
 
         raw_json_fn = f"raw/{basename}.json"
+        #  读取本地的json 文件中的数据
         if os.path.exists(raw_json_fn) and use_cache:
             with open(raw_json_fn, "rt", encoding="utf-8") as f:
                 entries = json.load(f)
                 print(f'loaded from cached "{raw_json_fn}"')
         else:
+            # 按天获取数据
             entries = await self.fetch_by_date(dt, paid_only=paid_only)
             lines = ",\n".join(
                 json.dumps(entry, ensure_ascii=False, separators=(",", ":"))
@@ -136,7 +162,13 @@ class Dumper:
     async def dump_date_range(
         self, dt: datetime, n_days: int, paid_only=True, use_cache=True
     ):
-        """Backwards dump transactions starting from date `dt`, up to `n_days` ago"""
+        """Backwards dump transactions starting from date `dt`, up to `n_days` ago
+        :param dt: 时间戳
+        :param n_days: 提前 n 天的数据
+        :param paid_only: ???
+        :param use_caseh: ???
+        return ???
+        """
         for diff in range(n_days):
             await self.dump_by_date(
                 dt - timedelta(days=diff), paid_only=paid_only, use_cache=use_cache

@@ -16,7 +16,7 @@ init_reminder_db()
 init_user_db()
 
 
-def page_render2():
+def birthday_notify():
     st.header("🎂 生日提醒", divider=True)
 
     # 功能 1：显示每日发送生日提醒的时间
