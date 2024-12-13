@@ -1,7 +1,7 @@
 
 
 
-./data
+./data/user_data.db
 
 __pycache__
 *.py[cod]
