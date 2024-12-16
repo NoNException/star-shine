@@ -26,7 +26,7 @@ def get_gitft_types():
     return rep.json()
 
 
-def query_revenue_list(date, session_data: str):
+def query_revenue_list(date, session_data: str, user_name: str, date_str: str = ""):
     """
     获取指定天数,指定类型的礼物列表
     :param date: 需要查询的日期
@@ -35,10 +35,10 @@ def query_revenue_list(date, session_data: str):
     """
     param = {
         "limit": 20,
-        "coin_type": "",
-        "gift_id": "",
-        "begin_time": date.strftime("%Y-%m-%d"),
-        "uname": "",
+        "coin_type": "",  # 礼物类型, 电池礼物, 银瓜子礼物
+        "gift_id": "",  # 礼物 ID
+        "begin_time": date_str if date_str else date.strftime("%Y-%m-%d"),
+        "uname": user_name,
     }
 
     print(f"session_data,0000000000 {session_data}")
