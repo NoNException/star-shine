@@ -12,3 +12,4 @@ def revenue_lister():
     token, _ = get_token()
     revenues = query_revenue_list(datetime.now(), str(token))
     st.dataframe(revenues)
+    # TODO
