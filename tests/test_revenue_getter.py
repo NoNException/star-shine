@@ -11,10 +11,11 @@ class TestRevenueGetter(unittest.TestCase):
     """
 
     def test_revenue_query(self):
-        now_datetime = datetime.now()
+        now_datetime = datetime.strptime("2024-12-14", "%Y-%m-%d")
         token, _ = get_token()
-        revenues = query_revenue_list(now_datetime, str(token), date_str="2024-12-14")
+        revenues = query_revenue_list(now_datetime, str(token), page_size=5)
         # 此处需要用户优先登录
         self.assertIsNotNone(revenues)
         self.assertTrue(len(revenues) > 0)
+        self.assertTrue(len(revenues) == 20)
         print(revenues)
