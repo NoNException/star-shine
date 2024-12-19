@@ -12,8 +12,9 @@ def init_user_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             birthday DATE NOT NULL,
-            email TEXT,
-            phone TEXT
+            luna_birthday DATE NOT NULL,
+            address TEXT NOT NULL,
+            phone TEXT NOT NULL
         )
     """)
     conn.commit()
@@ -21,15 +22,15 @@ def init_user_db():
 
 
 # 插入数据
-def insert_user(name, birthday, email, phone):
+def insert_user(name, birthday, luna_birthday, address, phone):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO users (name, birthday, email, phone)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO users (name, birthday, luna_birthday, address, phone)
+        VALUES (?, ?, ?, ?, ? )
     """,
-        (name, birthday, email, phone),
+        (name, birthday, luna_birthday, address, phone),
     )
     conn.commit()
     conn.close()
@@ -44,16 +45,16 @@ def fetch_users():
 
 
 # 更新用户信息
-def update_user(user_id, name, birthday, email, phone):
+def update_user(user_id, name, birthday, luna_birthday, address, phone):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute(
         """
         UPDATE users
-        SET name = ?, birthday = ?, email = ?, phone = ?
+        SET name = ?, birthday = ?,luna_birthday=?, address = ?, phone = ?
         WHERE id = ?
     """,
-        (name, birthday, email, phone, user_id),
+        (name, birthday, luna_birthday, address, phone, user_id),
     )
     conn.commit()
     conn.close()

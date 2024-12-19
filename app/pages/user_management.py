@@ -24,7 +24,6 @@ def user_info_manager():
     if not users.empty:
         # 将用户数据展示为表格
         st.dataframe(users)
-
         # 编辑功能
         st.subheader("✏️ 编辑用户信息")
         user_id = st.selectbox("选择用户 ID", users["id"])
@@ -35,12 +34,15 @@ def user_info_manager():
             birthday = st.date_input(
                 "生日", value=pd.to_datetime(selected_user["birthday"])
             )
-            email = st.text_input("邮箱", value=selected_user["email"])
+            luna_birthday = st.date_input(
+                "生日(农历)", value=pd.to_datetime(selected_user["luna_birthday"])
+            )
+            address = st.text_input("地址", value=selected_user["address"])
             phone = st.text_input("电话", value=selected_user["phone"])
 
             submitted = st.form_submit_button("提交修改")
             if submitted:
-                update_user(user_id, name, birthday, email, phone)
+                update_user(user_id, name, birthday, luna_birthday, address, phone)
                 st.success("用户信息已更新！")
                 st.session_state["refresh"] = True
 
@@ -63,7 +65,11 @@ def user_info_manager():
                 if st.button("保存到数据库"):
                     for _, row in data.iterrows():
                         insert_user(
-                            row["name"], row["birthday"], row["email"], row["phone"]
+                            row["name"],
+                            row["birthday"],
+                            row["luna_birthday"],
+                            row["address"],
+                            row["phone"],
                         )
                     st.success("用户信息已成功保存！")
                     st.session_state["refresh"] = True
