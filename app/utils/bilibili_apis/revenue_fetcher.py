@@ -1,9 +1,7 @@
-from logging import raiseExceptions
 from sqlite3 import Error
-from pandas.core.frame import itertools
+
 import requests
-import streamlit as st
-from streamlit.runtime.state import session_state
+from pandas.core.frame import itertools
 
 GIFTTYPE_API = "https://api.live.bilibili.com/gift/v1/master/getGiftTypes"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"

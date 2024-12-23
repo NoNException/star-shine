@@ -1,5 +1,7 @@
+from dataclasses import asdict
 import sqlite3
 import pandas as pd
+from app.assets.data_class import UserInfo
 from app.config import DATABASE_PATH
 
 
@@ -8,7 +10,7 @@ def init_user_db():
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
+        CREATE TABLE IF NOT EXISTS t_user (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             birthday DATE NOT NULL,
@@ -22,15 +24,15 @@ def init_user_db():
 
 
 # 插入数据
-def insert_user(name, birthday, luna_birthday, address, phone):
+def insert_user(user_info: UserInfo):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO users (name, birthday, luna_birthday, address, phone)
-        VALUES (?, ?, ?, ?, ? )
+        INSERT INTO t_user (id, name, birthday, luna_birthday, address, phone)
+        VALUES (:id, :name, :birthday, :luna_birthday, :address, :phone)
     """,
-        (name, birthday, luna_birthday, address, phone),
+        asdict(user_info),
     )
     conn.commit()
     conn.close()
@@ -39,7 +41,7 @@ def insert_user(name, birthday, luna_birthday, address, phone):
 # 查询所有用户
 def fetch_users():
     conn = sqlite3.connect(DATABASE_PATH)
-    df = pd.read_sql_query("SELECT * FROM users", conn)
+    df = pd.read_sql_query("SELECT * FROM t_user", conn)
     conn.close()
     return df
 
@@ -50,8 +52,8 @@ def update_user(user_id, name, birthday, luna_birthday, address, phone):
     cursor = conn.cursor()
     cursor.execute(
         """
-        UPDATE users
-        SET name = ?, birthday = ?,luna_birthday=?, address = ?, phone = ?
+        UPDATE t_user
+        SET name = ?, birthday = ?, luna_birthday=?, address = ?, phone = ?
         WHERE id = ?
     """,
         (name, birthday, luna_birthday, address, phone, user_id),
@@ -64,6 +66,6 @@ def update_user(user_id, name, birthday, luna_birthday, address, phone):
 def delete_user(user_id):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    cursor.execute("DELETE FROM t_user WHERE id = ?", (user_id,))
     conn.commit()
     conn.close()
