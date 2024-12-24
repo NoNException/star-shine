@@ -3,6 +3,7 @@ import sqlite3
 import pandas as pd
 from app.assets.data_class import UserInfo
 from app.config import DATABASE_PATH
+from typing import List
 
 
 # 初始化数据库
@@ -47,16 +48,20 @@ def fetch_users():
 
 
 # 更新用户信息
-def update_user(user_id, name, birthday, luna_birthday, address, phone):
+def update_user(user_info: UserInfo):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     cursor.execute(
         """
         UPDATE t_user
-        SET name = ?, birthday = ?, luna_birthday=?, address = ?, phone = ?
-        WHERE id = ?
+        SET name = :name,
+        birthday = :birthday,
+        luna_birthday= :luna_birthday, 
+        address = :address, 
+        phone = :phone
+        WHERE id = :id
     """,
-        (name, birthday, luna_birthday, address, phone, user_id),
+        asdict(user_info),
     )
     conn.commit()
     conn.close()
