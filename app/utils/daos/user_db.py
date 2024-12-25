@@ -1,6 +1,7 @@
 from dataclasses import asdict
 import sqlite3
 import pandas as pd
+from pandas import DataFrame
 from app.assets.data_class import UserInfo
 from app.config import DATABASE_PATH
 from typing import List
@@ -41,6 +42,13 @@ def insert_user(user_info: UserInfo):
 
 # 查询所有用户
 def fetch_users():
+    """
+     获取全部的用户
+    :param parser: 是否进行类型转换, True 则转换成 List[UserInfo]
+
+    :return: List[UserInfo]
+    """
+
     conn = sqlite3.connect(DATABASE_PATH)
     df = pd.read_sql_query("SELECT * FROM t_user", conn)
     conn.close()
