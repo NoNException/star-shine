@@ -3,6 +3,7 @@ import time
 import streamlit as st
 from typing import List
 from app.assets.data_class import UserInfo
+from app.assets.data_in_pagination import pagination_container
 from app.utils.daos.user_db import (
     fetch_users,
     init_user_db,
@@ -15,13 +16,14 @@ from app.utils.daos.file_handler import read_uploaded_file
 init_user_db()
 
 
-def load_user_from_excel(user_exists: List[UserInfo]):
-    """从 excel 文件中读取用户信息"""
+def load_user_from_excel(exists_user_id: List[int]):
+    """从 excel 文件中读取用户信息
+    :param exists_user_id: 存在的用户 ID 列表
+    """
     uploaded_file = st.file_uploader("上传舰长名单", type=["xlsx"])
     if uploaded_file and (
         "refresh" not in st.session_state.keys() or not st.session_state["refresh"]
     ):
-        user_dict = [u.id for u in user_exists]
         # 读取文件并显示
         user_info = read_uploaded_file(
             uploaded_file, date_cols=["birthday", "luna_birthday"]
@@ -31,7 +33,7 @@ def load_user_from_excel(user_exists: List[UserInfo]):
         for index, row in user_info.iterrows():
             user_id = int(row["id"])
             row_indict = row.to_dict()
-            if user_id in user_dict:
+            if user_id in exists_user_id:
                 update_user(UserInfo(**row_indict))
             else:
                 insert_user(UserInfo(**row_indict))
@@ -81,12 +83,8 @@ def user_info_manager():
     # 展示和编辑功能
     st.header("👥 舰队", divider=True)
     users = fetch_users()
-    if not users.empty:
+    if users.empty:
         # 将用户数据展示为表格
-        st.write("数据不存在, 请上传用户文件 ")
-    st.data_editor(users, num_rows="dynamic")
-    user_infos = [UserInfo(**u.to_dict()) for _, u in users.iterrows()]
-    bt = st.button(" 保存当前页")
-    if bt:
-        print("anna ")
-    load_user_from_excel(user_infos)
+        st.write(" 舰长数据不存在, 请上传用户文件 ")
+    pagination_container(users, data_editor=True)
+    load_user_from_excel([int(u["id"]) for _, u in users.iterrows()])
