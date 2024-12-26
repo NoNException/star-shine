@@ -1,7 +1,6 @@
 from dataclasses import asdict
 import sqlite3
 import pandas as pd
-from pandas import DataFrame
 from app.assets.data_class import UserInfo
 from app.config import DATABASE_PATH
 from typing import List
