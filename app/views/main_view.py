@@ -1,67 +1,139 @@
-import customtkinter as ctk
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from kivy.uix.stacklayout import StackLayout
+from kivy.uix.textinput import TextInput
+from kivy.core.window import Window
+from kivy.graphics import Color, Rectangle
+
+# 设置窗口背景颜色（浅色主题）
+Window.clearcolor = (0.25, 0.9, 0.9, 1)
 
 
-class MainView(ctk.CTkFrame):
-    """主视图框架：包含左侧导航栏、中间操作面板、右侧信息栏"""
+class MainView(BoxLayout):
+    """优化版三栏式布局：左侧导航栏、中间操作面板、右侧信息栏"""
 
-    def __init__(self, parent):
-        super().__init__(parent)
+    def __init__(self, **kwargs):
+        super().__init__(orientation='horizontal', padding=10, spacing=10, **kwargs)
 
-        # 设置主框架布局
-        self.grid_columnconfigure(1, weight=1)  # 中间面板自适应扩展
-        self.grid_rowconfigure(0, weight=1)
+        # 设置背景颜色
+        self.info_label = None
+        self.age_input = None
+        self.name_input = None
+        with self.canvas.before:
+            Color(0.25, 0.9, 0.9, 1)  # 浅青色背景
+            self.rect = Rectangle(size=self.size, pos=self.pos)
+        self.bind(size=self._update_rect, pos=self._update_rect)
 
-        # 创建左侧导航栏
-        self.create_sidebar()
+        # 创建界面布局
+        self.create_sidebar()  # 左侧导航栏
+        self.create_main_panel()  # 中间操作面板
+        self.create_info_panel()  # 右侧信息栏
 
-        # 创建中间操作面板
-        self.create_main_panel()
-
-        # 创建右侧信息栏
-        self.create_info_panel()
+    # 动态更新背景大小
+    def _update_rect(self, instance, value):
+        self.rect.size = instance.size
+        self.rect.pos = instance.pos
 
     # 左侧导航栏
     def create_sidebar(self):
-        self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
-        self.sidebar.grid(row=0, column=0, sticky="nswe")  # 固定在左侧
-        self.sidebar.grid_rowconfigure(10, weight=1)
+        sidebar = StackLayout(size_hint=(0.2, 1), padding=10, spacing=10)
 
-        # 标题
-        title_label = ctk.CTkLabel(self.sidebar, text="导航栏", font=("Arial", 18))
-        title_label.pack(pady=20)
-
-        # 添加导航按钮
-        self.nav_buttons = []
-        nav_items = ["首页", "用户管理", "设置"]
-        for item in nav_items:
-            btn = ctk.CTkButton(
-                self.sidebar, text=item, command=lambda x=item: self.on_nav_click(x)
+        # 按钮
+        buttons = ["Main", "UserManage", "System Setting"]
+        for btn_text in buttons:
+            btn = Button(
+                text=btn_text,
+                size_hint=(1, None),  # 水平占满，高度固定
+                height=40,
+                background_normal='',
+                background_color=(0.3, 0.3, 0.3, 1),
+                color=(1, 1, 1, 1)
             )
-            btn.pack(pady=10, padx=20, fill="x")
-            self.nav_buttons.append(btn)
+            btn.bind(on_press=self.on_nav_click)
+            sidebar.add_widget(btn)
+
+        self.add_widget(sidebar)
 
     # 中间操作面板
     def create_main_panel(self):
-        self.main_panel = ctk.CTkFrame(self, corner_radius=10)
-        self.main_panel.grid(row=0, column=1, sticky="nswe", padx=10, pady=10)
+        main_panel = StackLayout(size_hint=(0.6, 1), padding=20, spacing=20)
 
-        # 添加占位内容
-        label = ctk.CTkLabel(self.main_panel, text="操作面板", font=("Arial", 18))
-        label.pack(pady=20)
+        # 标题
+        main_panel.add_widget(Label(text="操作面板", font_size=18, size_hint_y=None, height=40))
+
+        # 表单布局
+        grid = StackLayout(spacing=10, padding=[20, 20, 20, 20])
+
+        # 姓名输入框
+        grid.add_widget(Label(text="姓名：", size_hint_y=None, height=30))
+        self.name_input = TextInput(
+            size_hint_y=None,
+            height=40,
+            background_color=(1, 1, 1, 1),  # 白色背景
+            foreground_color=(0, 0, 0, 1)  # 黑色文字
+        )
+        grid.add_widget(self.name_input)
+
+        # 年龄输入框
+        grid.add_widget(Label(text="年龄：", size_hint_y=None, height=30))
+        self.age_input = TextInput(
+            size_hint_y=None,
+            height=40,
+            background_color=(1, 1, 1, 1),
+            foreground_color=(0, 0, 0, 1)
+        )
+        grid.add_widget(self.age_input)
+
+        # 添加用户按钮
+        btn_add = Button(
+            text="添加用户",
+            size_hint_y=None,
+            height=40,
+            background_normal='',
+            background_color=(0.2, 0.2, 0.2, 1),
+            color=(1, 1, 1, 1)
+        )
+        btn_add.bind(on_press=self.add_user)
+        grid.add_widget(btn_add)
+
+        # 添加表单到操作面板
+        main_panel.add_widget(grid)
+        self.add_widget(main_panel)
 
     # 右侧信息栏
     def create_info_panel(self):
-        self.info_panel = ctk.CTkFrame(self, width=200, corner_radius=0)
-        self.info_panel.grid(row=0, column=2, sticky="nswe", padx=(0, 10))  # 固定在右侧
+        info_panel = StackLayout(size_hint=(0.2, 1), padding=10, spacing=10)
 
-        # 信息栏标题
-        info_label = ctk.CTkLabel(self.info_panel, text="信息栏", font=("Arial", 18))
-        info_label.pack(pady=20)
+        # 添加标题
+        info_panel.add_widget(Label(text="信息栏", font_size=18, size_hint_y=None, height=50))
 
-        # 示例信息显示
-        self.info_text = ctk.CTkTextbox(self.info_panel, height=400, width=180)
-        self.info_text.pack(padx=10, pady=10)
+        # 添加信息显示标签
+        self.info_label = Label(
+            text="等待操作...",
+            size_hint_y=None,
+            height=400,
+            halign="left",
+            valign="top"
+        )
+        self.info_label.bind(size=self.info_label.setter('text_size'))  # 文字动态调整
+        info_panel.add_widget(self.info_label)
+
+        # 添加信息栏到布局
+        self.add_widget(info_panel)
 
     # 导航栏按钮点击事件
-    def on_nav_click(self, item):
-        self.info_text.insert("end", f"点击了: {item}\n")
+    def on_nav_click(self, instance):
+        self.info_label.text = f"点击了：{instance.text}"
+
+    # 添加用户按钮点击事件
+    def add_user(self, instance):
+        # 获取输入值
+        name = self.name_input.text
+        age = self.age_input.text
+
+        # 检查输入是否有效
+        if not name or not age.isdigit():
+            self.info_label.text = "[b]输入无效，请重新输入！[/b]"
+        else:
+            self.info_label.text = f"[b]用户添加成功！[/b]\n姓名：{name}, 年龄：{age}"
