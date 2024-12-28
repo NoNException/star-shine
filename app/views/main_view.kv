@@ -1,0 +1,116 @@
+<MainView>:
+    orientation: 'horizontal'
+    padding: 10
+    spacing: 10
+
+    # 左侧导航栏
+    StackLayout:
+        size_hint: (0.2, 1)
+        padding: 10
+        spacing: 10
+
+        Label:
+            text: "导航栏"
+            font_size: 18
+            size_hint_y: None
+            height: 50
+
+        Button:
+            text: "Main"
+            size_hint_y: None
+            height: 40
+            background_normal: ''
+            background_color: (0.3, 0.3, 0.3, 1)
+            color: (1, 1, 1, 1)
+            on_press: root.on_nav_click(self)
+
+        Button:
+            text: "UserManage"
+            size_hint_y: None
+            height: 40
+            background_normal: ''
+            background_color: (0.3, 0.3, 0.3, 1)
+            color: (1, 1, 1, 1)
+            on_press: root.on_nav_click(self)
+
+        Button:
+            text: "System Setting"
+            size_hint_y: None
+            height: 40
+            background_normal: ''
+            background_color: (0.3, 0.3, 0.3, 1)
+            color: (1, 1, 1, 1)
+            on_press: root.on_nav_click(self)
+
+    # 中间操作面板
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: (0.6, 1)
+        padding: 20
+        spacing: 20
+
+        Label:
+            text: "操作面板"
+            font_size: 18
+            size_hint_y: None
+            height: 40
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 10
+            padding: [20, 20, 20, 20]
+
+            Label:
+                text: "姓名："
+                size_hint_y: None
+                height: 30
+
+            TextInput:
+                id: name_input
+                size_hint_y: None
+                height: 40
+                background_color: (1, 1, 1, 1)
+                foreground_color: (0, 0, 0, 1)
+
+            Label:
+                text: "年龄："
+                size_hint_y: None
+                height: 30
+
+            TextInput:
+                id: age_input
+                size_hint_y: None
+                height: 40
+                background_color: (1, 1, 1, 1)
+                foreground_color: (0, 0, 0, 1)
+
+            Button:
+                text: "添加用户"
+                size_hint_y: None
+                height: 40
+                background_normal: ''
+                background_color: (0.2, 0.2, 0.2, 1)
+                color: (1, 1, 1, 1)
+                on_press: root.add_user()
+
+    # 右侧信息栏
+    BoxLayout:
+        orientation: 'vertical'
+        size_hint: (0.2, 1)
+        padding: 10
+        spacing: 10
+
+        Label:
+            text: "信息栏"
+            font_size: 18
+            size_hint_y: None
+            height: 50
+
+        Label:
+            id: info_label
+            text: "等待操作..."
+            size_hint_y: None
+            height: 400
+            halign: "left"
+            valign: "top"
+            text_size: self.size

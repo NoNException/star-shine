@@ -1,0 +1,12 @@
+[tool.pyright]
+include = ["."]
+exclude = [
+    "**/node_modules",
+    "**/__pycache__"
+]
+
+# 启用基本类型检查模式
+typeCheckingMode = "basic"
+# 从库代码推断类型（对缺失类型定义的模块很有用）
+useLibraryCodeForTypes = true
+
