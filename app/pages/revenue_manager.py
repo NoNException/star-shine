@@ -17,6 +17,7 @@ def days_gap(date_range: List[str]):
     return:  日期
     """
     date_format = "%Y-%m-%d"
+
     start_date = datetime.strptime(date_range[0], date_format)
     if len(date_range) != 2 and not date_range[1]:
         end_date = datetime.today() - timedelta(1)

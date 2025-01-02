@@ -15,15 +15,14 @@ class HomePage(ft.Row):
         # 右侧信息栏
         self.info_panel = InfoPanel()
         self.expand = True
-
         # 布局设置
         self.controls = [
             ft.Container(self.nav_bar),
             ft.VerticalDivider(width=2),
             ft.Column(
                 controls=[
-                    ft.Container(self.operation_panel, expand=1),
+                    ft.Container(self.operation_panel, width=300, expand=1),
                 ],
             ),
-            ft.Container(self.info_panel, width=300),
+            ft.Container(self.info_panel, width=200),
         ]

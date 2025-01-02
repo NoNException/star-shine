@@ -11,6 +11,7 @@ init_login_db()
 
 def page_render():
     st.title("📲 用户扫码登录")
+    st..
 
     # 请求二维码
     try:

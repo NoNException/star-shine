@@ -10,8 +10,10 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.START
     page.padding = 10
 
+    print(page)
     # 加载主页
     home_page = HomePage(page)
+
     page.add(home_page)
 
     # 运行应用
@@ -20,4 +22,3 @@ def main(page: ft.Page):
 
 # 启动应用
 ft.app(target=main)
-
