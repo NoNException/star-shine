@@ -6,7 +6,6 @@ class NavigationRailPanel(ft.NavigationRail):
         super().__init__()
         self.page = page
         self.min_width = 100
-        self.min_extended_width = 100
         self.group_alignment = -1
         # 默认选中第一个菜单项
         self.selected_index = 0

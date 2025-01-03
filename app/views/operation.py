@@ -2,17 +2,44 @@ import flet as ft
 
 
 class OperationPanel(ft.Column):
+    """
+    Empty views
+    There are none user's , upload from xlxs [UPLOAD]
+
+    [Qeruy By Name ][Query][Add]
+    [All][2 Days][7 Days]
+    +============================+
+    |头像|名称|男/女| Edit       |
+    +============================+
+    """
+
     def __init__(self):
         super().__init__()
-        self.spacing = 20
+        self.name_query = ft.TextField(hint_text="Query By Name", expand=True)
+        self.width = 400
+        user_options = ft.Row(
+            alignment=ft.MainAxisAlignment.START,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                self.name_query,
+                ft.OutlinedButton(
+                    icon=ft.Icons.FIND_IN_PAGE_SHARP, on_click=self.find_by_name
+                ),
+                ft.OutlinedButton(icon=ft.Icons.ADD),
+                ft.OutlinedButton(icon=ft.Icons.UPLOAD),
+            ],
+        )
+        user_info = ft.Row(
+            alignment=ft.MainAxisAlignment.START,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Text("头像"),
+                ft.Text("名称"),
+                ft.Text("性别"),
+                ft.OutlinedButton(icon=ft.Icons.EDIT),
+            ],
+        )
+        self.controls = [user_options, user_info]
 
-        # 操作栏标题
-        self.controls.append(ft.Text("操作面板", size=20, weight=ft.FontWeight.BOLD))
-
-        # 输入框和按钮
-        self.controls.append(ft.TextField(label="姓名", width=300))
-        self.controls.append(ft.TextField(label="年龄", width=300))
-        self.controls.append(ft.ElevatedButton(text="提交", on_click=self.submit_form))
-
-    def submit_form(self, e):
-        print("提交数据成功！")
+    def find_by_name(self, e):
+        print("a")
