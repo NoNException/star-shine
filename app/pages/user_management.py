@@ -1,7 +1,6 @@
-from numpy import save
 import pandas as pd
+from pathlib import Path
 from pandas import DataFrame
-import time
 import streamlit as st
 from typing import List
 from app.assets.data_class import UserInfo
@@ -18,43 +17,28 @@ from app.utils.daos.file_handler import read_uploaded_file
 init_user_db()
 
 
-def save_func(base_ids: List[int], users: DataFrame):
-    total_len = len(users)
-    sync_bar = st.progress(0, "数据同步中...")
+def save_func(base_ids: List[int], users: DataFrame, mode):
     for index, row in users.iterrows():
         user_id = int(row["id"])
         row_indict = row.to_dict()
-        if user_id in base_ids:
+        if user_id in base_ids and mode == "override":
             update_user(UserInfo(**row_indict))
         else:
             insert_user(UserInfo(**row_indict))
-        sync_bar.progress(
-            int(index + 1) / total_len * 1.0, text=f"{index + 1} / {total_len}"
-        )
-        time.sleep(0.3)
-    time.sleep(1)
 
 
-def load_user_from_excel(exists_user_id: List[int]):
+def load_user_from_excel(excel_file_path: str, mode: str = "override"):
     """从 excel 文件中读取用户信息
     :param exists_user_id: 存在的用户 ID 列表
     """
-    uploaded_file = st.file_uploader("上传舰长名单", type=["xlsx"])
-    if uploaded_file and (
-        "refresh" not in st.session_state.keys() or not st.session_state["refresh"]
-    ):
-        # 读取文件并显示
-        user_info = read_uploaded_file(
-            uploaded_file, date_cols=["birthday", "luna_birthday"]
-        )
-        save_func(exists_user_id, user_info)
-        st.warning("用户信息更新成功!")
-        time.sleep(1)
-        st.session_state["refresh"] = True
-        uploaded_file = False
-        st.rerun()
-    else:
-        st.session_state["refresh"] = False
+    # TODO S 修改此处的代码
+    home = Path.home()
+    user_info = read_uploaded_file(
+        f"{home}/{excel_file_path.split(home)[-1]}",
+        date_cols=["birthday", "luna_birthday"],
+    )
+    exists_user_id = []
+    save_func(exists_user_id, user_info, mode)
 
 
 def update_user_info(user_id, selected_user):
@@ -94,4 +78,4 @@ def user_info_manager():
         # 将用户数据展示为表格
         st.write(" 舰长数据不存在, 请上传用户文件 ")
     pagination_container(users, save_func, data_editor=True)
-    load_user_from_excel([int(u["id"]) for _, u in users.iterrows()])
+    # load_user_from_excel([int(u["id"]) for _, u in users.iterrows()])
