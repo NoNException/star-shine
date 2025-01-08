@@ -1,8 +1,5 @@
-from fastapi import background
 import flet as ft
-import os
 from app.pages.user_management import load_user_from_excel
-from app.utils.daos.file_handler import read_uploaded_file
 
 
 class CaptainView(ft.Column):
@@ -68,8 +65,6 @@ class CaptainView(ft.Column):
         file_path = ""
         for f in e.files:
             self.file_list.controls.append(ft.Text(f.name))
-            print(f)
-            print("+-+")
             file_path = f.path
         # 添加选择器
         self.file_list.controls.append(
@@ -92,4 +87,6 @@ class CaptainView(ft.Column):
         self.update()
 
     def find_by_name(self, e):
-        print("a")
+
+
+        print(e)

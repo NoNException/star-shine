@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from pathlib import Path
 from pandas import DataFrame
 import streamlit as st
@@ -29,12 +30,12 @@ def save_func(base_ids: List[int], users: DataFrame, mode):
 
 def load_user_from_excel(excel_file_path: str, mode: str = "override"):
     """从 excel 文件中读取用户信息
-    :param exists_user_id: 存在的用户 ID 列表
+    :param excel_file_path: 存在的用户 ID 列表
+    :param mode: 模式, override 覆盖, append 追加
     """
-    # TODO S 修改此处的代码
-    home = Path.home()
+    home = str(Path.home())
     user_info = read_uploaded_file(
-        f"{home}/{excel_file_path.split(home)[-1]}",
+        f"{home}{excel_file_path.split(home)[-1]}",
         date_cols=["birthday", "luna_birthday"],
     )
     exists_user_id = []

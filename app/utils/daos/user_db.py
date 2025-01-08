@@ -3,7 +3,6 @@ import sqlite3
 import pandas as pd
 from app.assets.data_class import UserInfo
 from app.config import DATABASE_PATH
-from typing import List
 
 
 # 初始化数据库
