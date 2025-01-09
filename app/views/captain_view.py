@@ -1,5 +1,12 @@
+from typing import List
+
 import flet as ft
+from flet.core.types import MainAxisAlignment, CrossAxisAlignment
+from openpyxl.styles.alignment import vertical_aligments
+
+from app.assets.data_class import UserInfo
 from app.pages.user_management import load_user_from_excel
+from app.utils.daos.user_db import fetch_users
 
 
 class CaptainView(ft.Column):
@@ -30,7 +37,7 @@ class CaptainView(ft.Column):
                 ft.OutlinedButton(
                     icon=ft.Icons.FIND_IN_PAGE_SHARP, on_click=self.find_by_name
                 ),
-                ft.OutlinedButton(icon=ft.Icons.ADD),
+                ft.OutlinedButton(icon=ft.Icons.ADD, on_click=self.add_user),
                 ft.OutlinedButton(
                     icon=ft.Icons.UPLOAD,
                     on_click=lambda e: file_picker.pick_files(
@@ -40,27 +47,19 @@ class CaptainView(ft.Column):
                 self.file_list,
             ],
         )
-        user_info = ft.Row(
-            alignment=ft.MainAxisAlignment.START,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            controls=[
-                ft.Text("头像"),
-                ft.Text("名称"),
-                ft.Text("性别"),
-                ft.OutlinedButton(icon=ft.Icons.EDIT),
-            ],
-        )
+        self.user_info = UserPanel(fetch_users())
 
         self.controls = [
             user_operations,
             ft.Divider(),
-            ft.Markdown("### 用户列表"),
-            user_info,
+            ft.Markdown("### 舰长列表"),
+            self.user_info,
         ]
+        page.update()
 
     def apply_captain_xlsx(self, e):
         """
-        展示文件名称
+        展示文件名称,
         """
         file_path = ""
         for f in e.files:
@@ -87,6 +86,71 @@ class CaptainView(ft.Column):
         self.update()
 
     def find_by_name(self, e):
-
-
         print(e)
+
+    def add_user(self, e):
+        end_drawer = ft.NavigationDrawer(
+            position=ft.NavigationDrawerPosition.END,
+            controls=[
+                ft.Container(
+                    padding=ft.padding.only(left=20, right=20, top=20, bottom=20),
+                    content=ft.Column(
+                        horizontal_alignment=CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.CircleAvatar(background_image_src="", radius=30, max_radius= 100),
+                            ft.TextField(label="姓名"),
+                            ft.TextField(label="生日"), ft.TextField(label="生日(农历)"),
+                            ft.TextField(label="地址"), ft.TextField(label="电话"),
+                            ft.ElevatedButton(text="从 Bilibili 链接拉取头像", on_click=self.fetch_from_bilibili_url),
+                            ft.ElevatedButton(text="提交")
+                        ]),
+                ),
+            ],
+        )
+
+        self.page.open(end_drawer)
+
+    def fetch_from_bilibili_url(self, e):
+        print(e)
+
+
+class UserPanel(ft.Container):
+    def __init__(self, users: List[UserInfo]):
+        super().__init__()
+        self.users = []
+
+        self.grid_view = ft.GridView(
+            expand=True,
+            runs_count=4,
+            child_aspect_ratio=3,
+            spacing=1,
+            run_spacing=1,
+        )
+        self.content = self.grid_view
+
+    def did_mount(self):
+        self.users = fetch_users()
+        ft.Row(controls=[
+            ft.CircleAvatar(
+                foreground_image_src='https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif'),
+            ft.Text("test")
+        ])
+        user_cards = [ft.Card(content=render_user_card(u), ) for u in self.users]
+        self.grid_view.controls = user_cards
+
+        self.update()
+
+
+def render_user_card(user: UserInfo):
+    return ft.Row(
+        alignment=MainAxisAlignment.START,
+        vertical_alignment=CrossAxisAlignment.CENTER,
+        controls=[
+            ft.CircleAvatar(
+                radius=25, max_radius=200,
+                foreground_image_src='https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif'),
+            ft.Column(
+                alignment=MainAxisAlignment.CENTER,
+                controls=[ft.Text(user.name),
+                          ft.Text(user.birthday)])
+        ])

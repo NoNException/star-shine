@@ -1,5 +1,7 @@
 from dataclasses import asdict
 import sqlite3
+from typing import List
+
 import pandas as pd
 from app.assets.data_class import UserInfo
 from app.config import DATABASE_PATH
@@ -39,7 +41,7 @@ def insert_user(user_info: UserInfo):
 
 
 # 查询所有用户
-def fetch_users():
+def fetch_users() -> List[UserInfo]:
     """
      获取全部的用户
     :param parser: 是否进行类型转换, True 则转换成 List[UserInfo]
@@ -50,7 +52,9 @@ def fetch_users():
     conn = sqlite3.connect(DATABASE_PATH)
     df = pd.read_sql_query("SELECT * FROM t_user", conn)
     conn.close()
-    return df
+    users = [UserInfo(**(row)) for row in df.to_dict(orient='records')]
+    print(users, "????")
+    return users
 
 
 # 更新用户信息

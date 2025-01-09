@@ -7,7 +7,6 @@ from typing import List
 from app.assets.data_class import UserInfo
 from app.assets.data_in_pagination import pagination_container
 from app.utils.daos.user_db import (
-    fetch_users,
     init_user_db,
     insert_user,
     update_user,
@@ -74,7 +73,8 @@ def user_info_manager():
     # 上传功能
     # 展示和编辑功能
     st.header("👥 舰队", divider=True)
-    users = fetch_users()
+    users = []
+    # fetch_users()
     if users.empty:
         # 将用户数据展示为表格
         st.write(" 舰长数据不存在, 请上传用户文件 ")

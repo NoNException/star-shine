@@ -3,7 +3,6 @@ import pandas as pd
 from datetime import datetime
 from app.utils.daos.user_db import (
     init_user_db,
-    fetch_users,
 )
 from app.utils.daos.reminder_db import (
     init_reminder_db,
@@ -45,7 +44,8 @@ def birthday_notify():
             )
     # 功能 2：展示 1/3/7 天内即将过生日的用户
     st.header("即将过生日的用户", divider=True)
-    users = fetch_users()
+    users = []
+    # users = fetch_users()
 
     if not users.empty:
 
