@@ -1,8 +1,8 @@
 from typing import List
+import datetime
 
 import flet as ft
 from flet.core.types import MainAxisAlignment, CrossAxisAlignment
-from openpyxl.styles.alignment import vertical_aligments
 
 from app.assets.data_class import UserInfo
 from app.pages.user_management import load_user_from_excel
@@ -24,6 +24,7 @@ class CaptainView(ft.Column):
     def __init__(self, page: ft.Page):
         super().__init__()
         self.expand = True
+        self.page = page
         # 文件上传
         file_picker = ft.FilePicker(
             on_result=self.apply_captain_xlsx,
@@ -89,23 +90,10 @@ class CaptainView(ft.Column):
         print(e)
 
     def add_user(self, e):
+        user_adder = UserAdder(self.page)
         end_drawer = ft.NavigationDrawer(
             position=ft.NavigationDrawerPosition.END,
-            controls=[
-                ft.Container(
-                    padding=ft.padding.only(left=20, right=20, top=20, bottom=20),
-                    content=ft.Column(
-                        horizontal_alignment=CrossAxisAlignment.CENTER,
-                        controls=[
-                            ft.CircleAvatar(background_image_src="", radius=30, max_radius= 100),
-                            ft.TextField(label="姓名"),
-                            ft.TextField(label="生日"), ft.TextField(label="生日(农历)"),
-                            ft.TextField(label="地址"), ft.TextField(label="电话"),
-                            ft.ElevatedButton(text="从 Bilibili 链接拉取头像", on_click=self.fetch_from_bilibili_url),
-                            ft.ElevatedButton(text="提交")
-                        ]),
-                ),
-            ],
+            controls=[user_adder],
         )
 
         self.page.open(end_drawer)
@@ -129,16 +117,75 @@ class UserPanel(ft.Container):
         self.content = self.grid_view
 
     def did_mount(self):
+        # 在每次加载 panel 的时候, 查询用户信息
         self.users = fetch_users()
-        ft.Row(controls=[
-            ft.CircleAvatar(
-                foreground_image_src='https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif'),
-            ft.Text("test")
-        ])
-        user_cards = [ft.Card(content=render_user_card(u), ) for u in self.users]
+        ft.Row(
+            controls=[
+                ft.CircleAvatar(
+                    foreground_image_src="https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif"
+                ),
+                ft.Text("test"),
+            ]
+        )
+        user_cards = [
+            ft.Card(
+                content=render_user_card(u),
+            )
+            for u in self.users
+        ]
         self.grid_view.controls = user_cards
 
         self.update()
+
+
+class UserAdder(ft.Container):
+    """用户添加 panel"""
+
+    def __init__(self, page: ft.Page):
+        super().__init__()
+        self.padding = ft.padding.only(left=20, right=20, top=20, bottom=20)
+
+        self.page = page
+
+        def handle_change(e):
+            print(e)
+
+        def handle_dismissal(e):
+            print(e)
+
+        date_picker = ft.DatePicker(
+            first_date=datetime.datetime(year=2023, month=10, day=1),
+            last_date=datetime.datetime(year=2024, month=10, day=1),
+            date_picker_entry_mode=ft.DatePickerEntryMode.INPUT,
+            field_hint_text="日/月/年份",
+            on_change=handle_change,
+            on_dismiss=handle_dismissal,
+        )
+        self.content = ft.Column(
+            horizontal_alignment=CrossAxisAlignment.CENTER,
+            controls=[
+                ft.CircleAvatar(background_image_src="", radius=30, max_radius=100),
+                ft.TextField(label="昵称"),
+                ft.Row(
+                    controls=[
+                        ft.ElevatedButton(
+                            "Birthday", on_click=lambda e: self.page.open(date_picker)
+                        ),
+                    ]
+                ),
+                ft.TextField(label="生日(农历)"),
+                ft.TextField(label="地址"),
+                ft.TextField(label="电话"),
+                ft.ElevatedButton(
+                    text="从 Bilibili 链接拉取头像与昵称",
+                    on_click=self.fetch_from_bilibili_url,
+                ),
+                ft.ElevatedButton(text="提交"),
+            ],
+        )
+
+    def fetch_from_bilibili_url(self, e):
+        print(e)
 
 
 def render_user_card(user: UserInfo):
@@ -147,10 +194,13 @@ def render_user_card(user: UserInfo):
         vertical_alignment=CrossAxisAlignment.CENTER,
         controls=[
             ft.CircleAvatar(
-                radius=25, max_radius=200,
-                foreground_image_src='https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif'),
+                radius=25,
+                max_radius=200,
+                foreground_image_src="https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif",
+            ),
             ft.Column(
                 alignment=MainAxisAlignment.CENTER,
-                controls=[ft.Text(user.name),
-                          ft.Text(user.birthday)])
-        ])
+                controls=[ft.Text(user.name), ft.Text(user.birthday)],
+            ),
+        ],
+    )
