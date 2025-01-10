@@ -2,11 +2,12 @@ from typing import List
 import datetime
 
 import flet as ft
+from flet.core.textfield import KeyboardType
 from flet.core.types import MainAxisAlignment, CrossAxisAlignment
 
 from app.assets.data_class import UserInfo
 from app.pages.user_management import load_user_from_excel
-from app.utils.daos.user_db import fetch_users
+from app.utils.daos.user_db import fetch_users, update_user, insert_user
 
 
 class CaptainView(ft.Column):
@@ -56,7 +57,6 @@ class CaptainView(ft.Column):
             ft.Markdown("### 舰长列表"),
             self.user_info,
         ]
-        page.update()
 
     def apply_captain_xlsx(self, e):
         """
@@ -90,7 +90,7 @@ class CaptainView(ft.Column):
         print(e)
 
     def add_user(self, e):
-        user_adder = UserAdder(self.page)
+        user_adder = UserAdder(self.page, user_info=None)
         end_drawer = ft.NavigationDrawer(
             position=ft.NavigationDrawerPosition.END,
             controls=[user_adder],
@@ -105,11 +105,11 @@ class CaptainView(ft.Column):
 class UserPanel(ft.Container):
     def __init__(self, users: List[UserInfo]):
         super().__init__()
-        self.users = []
+        self.users = users
 
         self.grid_view = ft.GridView(
             expand=True,
-            runs_count=4,
+            runs_count=3,
             child_aspect_ratio=3,
             spacing=1,
             run_spacing=1,
@@ -141,51 +141,80 @@ class UserPanel(ft.Container):
 class UserAdder(ft.Container):
     """用户添加 panel"""
 
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, user_info: UserInfo = None):
         super().__init__()
         self.padding = ft.padding.only(left=20, right=20, top=20, bottom=20)
-
+        self.date_picker_mode = "birthday"
         self.page = page
-
-        def handle_change(e):
-            print(e)
-
-        def handle_dismissal(e):
-            print(e)
-
-        date_picker = ft.DatePicker(
+        self.user_info = UserInfo() if not user_info else user_info
+        self.date_picker = ft.DatePicker(
             first_date=datetime.datetime(year=2023, month=10, day=1),
-            last_date=datetime.datetime(year=2024, month=10, day=1),
+            last_date=datetime.datetime(year=2025, month=10, day=1),
             date_picker_entry_mode=ft.DatePickerEntryMode.INPUT,
-            field_hint_text="日/月/年份",
-            on_change=handle_change,
-            on_dismiss=handle_dismissal,
+            on_change=lambda e: self.handle_change(e),
         )
+        self.birthday = ft.ElevatedButton(
+            self.user_info.birthday if self.user_info.birthday else "Setting Birthday",
+            on_click=lambda e: self.open_date_picker(mode="birthday"),
+        )
+        self.luna_birthday = ft.ElevatedButton(
+            self.birthday if self.user_info.luna_birthday else "Setting Luna Birthday",
+            on_click=lambda e: self.open_date_picker(mode="luna_birthday"),
+        )
+        self.nick_name = ft.TextField(label="昵称", value=self.user_info.name if self.user_info.name else "")
+        self.address = ft.TextField(label="地址", value=self.user_info.address if self.user_info.address else "")
+        self.phone = ft.TextField(label="电话", value=self.user_info.phone if self.user_info.phone else "")
         self.content = ft.Column(
             horizontal_alignment=CrossAxisAlignment.CENTER,
             controls=[
                 ft.CircleAvatar(background_image_src="", radius=30, max_radius=100),
-                ft.TextField(label="昵称"),
-                ft.Row(
-                    controls=[
-                        ft.ElevatedButton(
-                            "Birthday", on_click=lambda e: self.page.open(date_picker)
-                        ),
-                    ]
-                ),
-                ft.TextField(label="生日(农历)"),
-                ft.TextField(label="地址"),
-                ft.TextField(label="电话"),
+                self.nick_name,
+                self.birthday,
+                self.luna_birthday,
+                self.address,
+                self.phone,
                 ft.ElevatedButton(
                     text="从 Bilibili 链接拉取头像与昵称",
                     on_click=self.fetch_from_bilibili_url,
                 ),
-                ft.ElevatedButton(text="提交"),
+                ft.ElevatedButton(text="提交", on_click=self.submit_user),
             ],
         )
 
+    def submit_user(self, e):
+        self.user_info.name = self.nick_name.value
+        self.user_info.address = self.address.value
+        self.user_info.phone = self.phone.value
+        print("submit user", self.user_info)
+        if self.user_info.id:
+            update_user(self.user_info)
+        else:
+            insert_user(self.user_info)
+
+
     def fetch_from_bilibili_url(self, e):
+        """
+        从 Bilibili 链接拉取头像与昵称
+        """
         print(e)
+
+    def handle_change(self, e):
+        """
+        处理日期选择器的变化
+        """
+        date_str = e.data.split("T")[0]
+        if self.date_picker_mode == "birthday":
+            self.birthday.text = date_str
+            self.user_info.birthday = date_str
+            self.birthday.update()
+        else:
+            self.luna_birthday.text = date_str
+            self.user_info.luna_birthday = date_str
+            self.luna_birthday.update()
+
+    def open_date_picker(self, mode="birthday"):
+        self.date_picker_mode = mode
+        self.page.open(self.date_picker)
 
 
 def render_user_card(user: UserInfo):

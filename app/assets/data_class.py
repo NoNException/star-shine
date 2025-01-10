@@ -3,12 +3,12 @@ from dataclasses import dataclass
 
 @dataclass
 class UserInfo:
-    id: int
-    name: str
-    birthday: str
-    luna_birthday: str
-    address: str
-    phone: str
+    id: int = None
+    name: str = None
+    birthday: str = None
+    luna_birthday: str = None
+    address: str = None
+    phone: str = None
 
 
 @dataclass

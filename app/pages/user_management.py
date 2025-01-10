@@ -69,14 +69,3 @@ def update_user_info(user_id, selected_user):
             st.rerun()
 
 
-def user_info_manager():
-    # 上传功能
-    # 展示和编辑功能
-    st.header("👥 舰队", divider=True)
-    users = []
-    # fetch_users()
-    if users.empty:
-        # 将用户数据展示为表格
-        st.write(" 舰长数据不存在, 请上传用户文件 ")
-    pagination_container(users, save_func, data_editor=True)
-    # load_user_from_excel([int(u["id"]) for _, u in users.iterrows()])
