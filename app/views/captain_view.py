@@ -49,15 +49,16 @@ class CaptainView(ft.Column):
                 self.file_list,
             ],
         )
-        self.user_list = UserList(fetch_users())
-        self.user_filter = ft.Tabs(selected_index=0, on_change=self.apply_tabs_change,
-                                   tabs=[ft.Tab(text="All"), ft.Tab(text="3Days"), ft.Tab(text="7Days"),
-                                         ft.Tab(text="In Months")]
-                                   )
         self.end_drawer = ft.NavigationDrawer(
             position=ft.NavigationDrawerPosition.END,
             controls=[UserAdder(self, self.page, user_info=None)],
         )
+        self.user_list = UserList(self, fetch_users())
+
+        self.user_filter = ft.Tabs(selected_index=0, on_change=self.apply_tabs_change,
+                                   tabs=[ft.Tab(text="All"), ft.Tab(text="3Days"), ft.Tab(text="7Days"),
+                                         ft.Tab(text="In Months")]
+                                   )
         self.controls = [
             user_operations,
             ft.Divider(),
@@ -101,21 +102,35 @@ class CaptainView(ft.Column):
         load_user_from_excel(file_path, mode)
         self.update()
 
-    def find_by_name(self, e):
-        print(e)
 
-    def modify_single_user(self, e):
+    def find_by_name(self, e):
+        pass
+
+    def modify_single_user(self, e, user_info: UserInfo = None):
+        """
+        添加/修改用户
+        """
+        if user_info:
+            self.end_drawer.controls = [UserAdder(self, self.page, user_info=user_info)]
         self.page.open(self.end_drawer)
 
     def close_end_drawer(self, e):
+        """
+        关闭抽屉
+        """
+        self.end_drawer.controls = [UserAdder(self,self.page)]
         self.page.close(self.end_drawer)
 
 
 class UserList(ft.Container):
-    def __init__(self, users: List[UserInfo]):
+    """
+    用户列表
+    """
+
+    def __init__(self, app: CaptainView, users: List[UserInfo]):
         super().__init__()
         self.users = users
-
+        self.app = app
         self.grid_view = ft.GridView(
             expand=True,
             runs_count=3,
@@ -153,8 +168,7 @@ class UserList(ft.Container):
         ]
         return user_cards
 
-    @staticmethod
-    def render_user_card(user: UserInfo):
+    def render_user_card(self, user: UserInfo):
         return ft.Row(
             alignment=MainAxisAlignment.START,
             vertical_alignment=CrossAxisAlignment.CENTER,
@@ -167,6 +181,7 @@ class UserList(ft.Container):
                     alignment=MainAxisAlignment.CENTER,
                     controls=[ft.Text(user.name), ft.Text(user.birthday)],
                 ),
+                ft.TextButton(text="修改", on_click=lambda e: self.app.modify_single_user(e, user)),
             ],
         )
 
