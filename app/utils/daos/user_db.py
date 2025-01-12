@@ -53,7 +53,6 @@ def fetch_users() -> List[UserInfo]:
     df = pd.read_sql_query("SELECT * FROM t_user", conn)
     conn.close()
     users = [UserInfo(**(row)) for row in df.to_dict(orient='records')]
-    print(users, "????")
     return users
 
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -9,6 +10,26 @@ class UserInfo:
     luna_birthday: str = None
     address: str = None
     phone: str = None
+    days_to_birthday: int = None
+
+    def birthday_in_range(self, pass_day):
+        days = datetime.strptime(self.birthday, "%Y-%m-%d")
+        day_gaps = days_to_birthday(days)
+        self.days_to_birthday = day_gaps
+        return pass_day >= day_gaps >= 0
+
+    def __lt__(self, other):
+        return self.days_to_birthday <= other.days_to_birthday
+
+
+def days_to_birthday(birthday):
+    today = datetime.today()
+    if not birthday:
+        return -1
+    if birthday.month < today.month:
+        return (birthday.replace(year=today.year + 1) - today).days + 1
+    else:
+        return (birthday.replace(year=today.year) - today).days + 1
 
 
 @dataclass

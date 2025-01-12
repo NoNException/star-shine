@@ -2,10 +2,10 @@ from typing import List
 import datetime
 
 import flet as ft
-from flet.core.textfield import KeyboardType
 from flet.core.types import MainAxisAlignment, CrossAxisAlignment
 
 from app.assets.data_class import UserInfo
+from app.pages.birthday_manager import user_to_birthday
 from app.pages.user_management import load_user_from_excel
 from app.utils.daos.user_db import fetch_users, update_user, insert_user
 
@@ -36,11 +36,11 @@ class CaptainView(ft.Column):
             alignment=ft.MainAxisAlignment.START,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                ft.OutlinedButton(
-                    icon=ft.Icons.FIND_IN_PAGE_SHARP, on_click=self.find_by_name
+                ft.CupertinoButton(
+                    icon=ft.Icons.FIND_IN_PAGE_SHARP, on_click=self.find_by_name,
                 ),
-                ft.OutlinedButton(icon=ft.Icons.ADD, on_click=self.add_user),
-                ft.OutlinedButton(
+                ft.CupertinoButton(icon=ft.Icons.ADD, on_click=self.modify_single_user),
+                ft.CupertinoButton(
                     icon=ft.Icons.UPLOAD,
                     on_click=lambda e: file_picker.pick_files(
                         allowed_extensions=["xlsx"]
@@ -49,14 +49,28 @@ class CaptainView(ft.Column):
                 self.file_list,
             ],
         )
-        self.user_info = UserPanel(fetch_users())
-
+        self.user_list = UserList(fetch_users())
+        self.user_filter = ft.Tabs(selected_index=0, on_change=self.apply_tabs_change,
+                                   tabs=[ft.Tab(text="All"), ft.Tab(text="3Days"), ft.Tab(text="7Days"),
+                                         ft.Tab(text="In Months")]
+                                   )
         self.controls = [
             user_operations,
             ft.Divider(),
-            ft.Markdown("### 舰长列表"),
-            self.user_info,
+            self.user_filter,
+            self.user_list,
         ]
+
+    def before_update(self):
+        filter_name = self.user_filter.tabs[self.user_filter.selected_index].text
+        self.user_list.apply_filter(filter_name)
+
+    def apply_tabs_change(self, e):
+        """
+        应用 filter , 筛选用户
+        :param e:
+        """
+        self.update()
 
     def apply_captain_xlsx(self, e):
         """
@@ -70,39 +84,35 @@ class CaptainView(ft.Column):
         self.file_list.controls.append(
             ft.OutlinedButton(
                 text="覆盖",
-                on_click=lambda e: self.save_captains(file_path, "override"),
+                on_click=lambda e: self.batch_save_captains(file_path, "override"),
             )
         )
 
         self.file_list.controls.append(
             ft.OutlinedButton(
                 text="追加",
-                on_click=lambda e: self.save_captains(file_path, "append"),
+                on_click=lambda e: self.batch_save_captains(file_path, "append"),
             )
         )
         self.update()
 
-    def save_captains(self, file_path: str, mode="override"):
+    def batch_save_captains(self, file_path: str, mode="override"):
         load_user_from_excel(file_path, mode)
         self.update()
 
     def find_by_name(self, e):
         print(e)
 
-    def add_user(self, e):
+    def modify_single_user(self, e):
         user_adder = UserAdder(self.page, user_info=None)
         end_drawer = ft.NavigationDrawer(
             position=ft.NavigationDrawerPosition.END,
             controls=[user_adder],
         )
-
         self.page.open(end_drawer)
 
-    def fetch_from_bilibili_url(self, e):
-        print(e)
 
-
-class UserPanel(ft.Container):
+class UserList(ft.Container):
     def __init__(self, users: List[UserInfo]):
         super().__init__()
         self.users = users
@@ -127,15 +137,41 @@ class UserPanel(ft.Container):
                 ft.Text("test"),
             ]
         )
-        user_cards = [
-            ft.Card(
-                content=render_user_card(u),
-            )
-            for u in self.users
-        ]
-        self.grid_view.controls = user_cards
-
+        self.grid_view.controls = self.user_card_builder(self.users)
         self.update()
+
+    def apply_filter(self, fileter_name):
+        day_filter_map = {
+            "3Days": 3, "7Days": 7, "In Months": 30
+        }
+        if fileter_name not in day_filter_map.keys():
+            return
+        users = user_to_birthday(day_filter_map[fileter_name])
+        self.grid_view.controls = [self.user_card_builder(users)]
+        self.update()
+
+    def user_card_builder(self, users: List[UserInfo]) -> List[ft.Card]:
+        user_cards = [
+            ft.Card(content=self.render_user_card(u), ) for u in users
+        ]
+        return user_cards
+
+    @staticmethod
+    def render_user_card(user: UserInfo):
+        return ft.Row(
+            alignment=MainAxisAlignment.START,
+            vertical_alignment=CrossAxisAlignment.CENTER,
+            controls=[
+                ft.CircleAvatar(radius=25,
+                                max_radius=200,
+                                foreground_image_src="https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif",
+                                ),
+                ft.Column(
+                    alignment=MainAxisAlignment.CENTER,
+                    controls=[ft.Text(user.name), ft.Text(user.birthday)],
+                ),
+            ],
+        )
 
 
 class UserAdder(ft.Container):
@@ -153,11 +189,11 @@ class UserAdder(ft.Container):
             date_picker_entry_mode=ft.DatePickerEntryMode.INPUT,
             on_change=lambda e: self.handle_change(e),
         )
-        self.birthday = ft.ElevatedButton(
+        self.birthday = ft.TextButton(
             self.user_info.birthday if self.user_info.birthday else "Setting Birthday",
             on_click=lambda e: self.open_date_picker(mode="birthday"),
         )
-        self.luna_birthday = ft.ElevatedButton(
+        self.luna_birthday = ft.TextButton(
             self.birthday if self.user_info.luna_birthday else "Setting Luna Birthday",
             on_click=lambda e: self.open_date_picker(mode="luna_birthday"),
         )
@@ -182,15 +218,20 @@ class UserAdder(ft.Container):
         )
 
     def submit_user(self, e):
+        """
+        提交用户信息
+        """
         self.user_info.name = self.nick_name.value
         self.user_info.address = self.address.value
         self.user_info.phone = self.phone.value
         print("submit user", self.user_info)
         if self.user_info.id:
+            # 如果用户存在, 则更新数据库中
             update_user(self.user_info)
         else:
+            # 点击了新增用户, 用户信息可以添加
             insert_user(self.user_info)
-
+        self.page.close(self)
 
     def fetch_from_bilibili_url(self, e):
         """
@@ -215,21 +256,3 @@ class UserAdder(ft.Container):
     def open_date_picker(self, mode="birthday"):
         self.date_picker_mode = mode
         self.page.open(self.date_picker)
-
-
-def render_user_card(user: UserInfo):
-    return ft.Row(
-        alignment=MainAxisAlignment.START,
-        vertical_alignment=CrossAxisAlignment.CENTER,
-        controls=[
-            ft.CircleAvatar(
-                radius=25,
-                max_radius=200,
-                foreground_image_src="https://i0.hdslb.com/bfs/face/7f704ecd473a4d933d51cd3e9356f78815fe1702.jpg@240w_240h_1c_1s_!web-avatar-nav.avif",
-            ),
-            ft.Column(
-                alignment=MainAxisAlignment.CENTER,
-                controls=[ft.Text(user.name), ft.Text(user.birthday)],
-            ),
-        ],
-    )

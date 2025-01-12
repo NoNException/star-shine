@@ -1,4 +1,6 @@
 import flet as ft
+from flet.core.textfield import TextField
+
 from app.views.navigation import SideBar
 from app.views.captain_view import CaptainView
 from app.views.info_panel import InfoPanel
@@ -15,10 +17,10 @@ class AppLayout(ft.Row):
         self.captain_view = CaptainView(page)
         # 右侧信息栏
         self.expand = True
-
         self._active_view: ft.Control = self.captain_view
         # 布局设置
-        self.controls = [self.nav_bar, ft.VerticalDivider(width=2), self._active_view]
+        self.controls = [self.nav_bar, ft.VerticalDivider(width=2), self._active_view
+                         ]
 
     @property
     def active_view(self):

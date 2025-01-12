@@ -11,7 +11,7 @@ class StarShine(AppLayout):
             "/notes": self.set_note_view,
         }
         self.page.on_route_change = self.route_change
-        super().__init__(self, self.page)
+        super().__init__(self, page)
 
     def route_change(self, index):
         template_route = ft.TemplateRoute(self.page.route)
@@ -26,7 +26,6 @@ class StarShine(AppLayout):
 
 
 def main(page: ft.Page):
-    page.adaptive = True
     # 设置页面标题和布局
     page.title = "Star Shine"
     page.theme_mode = ft.ThemeMode.SYSTEM
@@ -36,10 +35,13 @@ def main(page: ft.Page):
 
     # 加载主页
     home_page = StarShine(page)
-    page.add(home_page)
+    page.add(home_page,
+             ft.TextField(label="Standard")
+             )
     # 运行应用
     page.update()
 
 
-# 启动应用
-ft.app(target=main)
+if __name__ == '__main__':
+    # 启动应用
+    ft.app(target=main)
