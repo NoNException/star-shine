@@ -54,6 +54,10 @@ class CaptainView(ft.Column):
                                    tabs=[ft.Tab(text="All"), ft.Tab(text="3Days"), ft.Tab(text="7Days"),
                                          ft.Tab(text="In Months")]
                                    )
+        self.end_drawer = ft.NavigationDrawer(
+            position=ft.NavigationDrawerPosition.END,
+            controls=[UserAdder(self, self.page, user_info=None)],
+        )
         self.controls = [
             user_operations,
             ft.Divider(),
@@ -61,16 +65,13 @@ class CaptainView(ft.Column):
             self.user_list,
         ]
 
-    def before_update(self):
-        filter_name = self.user_filter.tabs[self.user_filter.selected_index].text
-        self.user_list.apply_filter(filter_name)
-
     def apply_tabs_change(self, e):
         """
         应用 filter , 筛选用户
         :param e:
         """
-        self.update()
+        filter_name = self.user_filter.tabs[self.user_filter.selected_index].text
+        self.user_list.apply_filter(filter_name)
 
     def apply_captain_xlsx(self, e):
         """
@@ -104,12 +105,10 @@ class CaptainView(ft.Column):
         print(e)
 
     def modify_single_user(self, e):
-        user_adder = UserAdder(self.page, user_info=None)
-        end_drawer = ft.NavigationDrawer(
-            position=ft.NavigationDrawerPosition.END,
-            controls=[user_adder],
-        )
-        self.page.open(end_drawer)
+        self.page.open(self.end_drawer)
+
+    def close_end_drawer(self, e):
+        self.page.close(self.end_drawer)
 
 
 class UserList(ft.Container):
@@ -138,16 +137,14 @@ class UserList(ft.Container):
             ]
         )
         self.grid_view.controls = self.user_card_builder(self.users)
-        self.update()
 
     def apply_filter(self, fileter_name):
         day_filter_map = {
             "3Days": 3, "7Days": 7, "In Months": 30
         }
-        if fileter_name not in day_filter_map.keys():
-            return
-        users = user_to_birthday(day_filter_map[fileter_name])
-        self.grid_view.controls = [self.user_card_builder(users)]
+        users = fetch_users() if fileter_name not in day_filter_map.keys() else user_to_birthday(
+            day_filter_map[fileter_name])
+        self.grid_view.controls = self.user_card_builder(users)
         self.update()
 
     def user_card_builder(self, users: List[UserInfo]) -> List[ft.Card]:
@@ -177,11 +174,12 @@ class UserList(ft.Container):
 class UserAdder(ft.Container):
     """用户添加 panel"""
 
-    def __init__(self, page: ft.Page, user_info: UserInfo = None):
+    def __init__(self, app: CaptainView, page: ft.Page, user_info: UserInfo = None):
         super().__init__()
         self.padding = ft.padding.only(left=20, right=20, top=20, bottom=20)
         self.date_picker_mode = "birthday"
         self.page = page
+        self.app = app
         self.user_info = UserInfo() if not user_info else user_info
         self.date_picker = ft.DatePicker(
             first_date=datetime.datetime(year=2023, month=10, day=1),
@@ -231,7 +229,7 @@ class UserAdder(ft.Container):
         else:
             # 点击了新增用户, 用户信息可以添加
             insert_user(self.user_info)
-        self.page.close(self)
+        self.app.close_end_drawer(e)
 
     def fetch_from_bilibili_url(self, e):
         """
