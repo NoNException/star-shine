@@ -1,8 +1,6 @@
 # 登录状态检查
 
 from datetime import datetime
-from os.path import expanduser
-from PIL.Image import init
 import streamlit as st
 import requests
 
@@ -55,7 +53,7 @@ request_session = requests.Session()
 request_session.headers.update({"User-Agent": "MyCustomUserAgent/1.0"})
 
 
-def generate_qr_code():
+def generate_qr_code() -> dict:
     """
     获取登录二维码
     """
@@ -65,7 +63,10 @@ def generate_qr_code():
     if response["code"] == 0:
         url = response["data"]["url"]
         qrcode_key = response["data"]["qrcode_key"]
-        return create_qrcode(url), qrcode_key
+        return {
+            "qrcode": create_qrcode(url),
+            "qrcode_key": qrcode_key
+        }
     raise Exception("Failed to generate QR code.")
 
 
@@ -77,5 +78,16 @@ def poll_qr_code(qrcode_key):
     url = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
     response = request_session.get(url, params={"qrcode_key": qrcode_key})
     response_data = response.json()
+    response_in_data: dict = response_data['data']
+    status_code = response_in_data["code"]
+    return status_code, response_in_data["url"] if "url" in response_in_data.keys() else None
 
-    return response_data
+
+def parse_login_url(url):
+    from urllib.parse import parse_qs, urlparse
+
+    query = parse_qs(urlparse(url).query)
+    return {
+        "SESSDATA": query.get("SESSDATA", [None])[0],
+        "Expires": int(query.get("Expires", [0])[0]),
+    }

@@ -1,6 +1,6 @@
 import unittest
 
-from app.pages.birthday_manager import user_to_birthday
+from app.service.captain_service import user_to_birthday
 
 
 class UserBirthdayTest(unittest.TestCase):

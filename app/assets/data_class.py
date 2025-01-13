@@ -51,7 +51,7 @@ class Revenue:
     ios_gold: int
     normal_gold: int
     is_hybrid: bool
-    is_open_platfrom: int
-    open_platfrom_rate: float
+    is_open_platform: int
+    open_platform_rate: float
     receive_title: str
     room_id: int

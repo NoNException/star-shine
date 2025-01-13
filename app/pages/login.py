@@ -3,7 +3,7 @@
 from urllib.parse import quote
 import streamlit as st
 import time
-from app.utils.login_utils import generate_qr_code, poll_qr_code
+from app.utils.login_utils import generate_qr_code, poll_qr_code, parse_login_url
 from app.utils.daos.login_db import init_login_db, save_token
 
 init_login_db()
@@ -11,7 +11,6 @@ init_login_db()
 
 def page_render():
     st.title("📲 用户扫码登录")
-    st..
 
     # 请求二维码
     try:
@@ -55,11 +54,3 @@ def page_render():
 
 
 # 解析登录 URL，提取 Token
-def parse_login_url(url):
-    from urllib.parse import parse_qs, urlparse
-
-    query = parse_qs(urlparse(url).query)
-    return {
-        "SESSDATA": query.get("SESSDATA", [None])[0],
-        "Expires": int(query.get("Expires", [0])[0]),
-    }

@@ -5,7 +5,7 @@ import flet as ft
 from flet.core.types import MainAxisAlignment, CrossAxisAlignment
 
 from app.assets.data_class import UserInfo
-from app.pages.birthday_manager import user_to_birthday
+from app.service.captain_service import user_to_birthday
 from app.pages.user_management import load_user_from_excel
 from app.utils.daos.user_db import fetch_users, update_user, insert_user
 
