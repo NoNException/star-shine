@@ -1,4 +1,4 @@
-from fastapi import requests
+import requests
 
 from app.utils.app_utils import app_log
 from app.utils.qrcode import create_qrcode

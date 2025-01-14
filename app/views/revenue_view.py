@@ -11,6 +11,7 @@ import flet as ft
 from app.service.revenue_service import is_user_need_login
 from app.utils.daos.login_db import save_token
 from app.service.bilibili_login_service import parse_login_url, poll_qr_code, generate_qr_code
+from app.utils.daos.revenue_db import query_revenues
 
 
 class RevenueListPage(ft.Container):
@@ -67,7 +68,19 @@ class RevenueListPage(ft.Container):
         if is_user_need_login():
             self.login_dialog.open_dialog(True)
             self.page.open(self.login_dialog)
-
+        else:
+            rows, count = query_revenues(
+                {
+                    "start_time": date_start,
+                    "unmae": user_name,
+                    "min_gold": amt_start,
+                    "max_gold": amt_end,
+                    "end_time": date_end,
+                    "gift_name": gift_name,
+                },
+                limit=10,
+                offset=0,
+            )
 
 
 class BilibiliLoginDialog(ft.AlertDialog):
