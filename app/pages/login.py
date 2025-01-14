@@ -3,7 +3,7 @@
 from urllib.parse import quote
 import streamlit as st
 import time
-from app.utils.login_utils import generate_qr_code, poll_qr_code, parse_login_url
+from app.service.bilibili_login_service import parse_login_url, poll_qr_code, generate_qr_code
 from app.utils.daos.login_db import init_login_db, save_token
 
 init_login_db()

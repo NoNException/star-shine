@@ -10,7 +10,7 @@ import flet as ft
 
 from app.service.revenue_service import is_user_need_login
 from app.utils.daos.login_db import save_token
-from app.utils.login_utils import generate_qr_code, poll_qr_code, parse_login_url
+from app.service.bilibili_login_service import parse_login_url, poll_qr_code, generate_qr_code
 
 
 class RevenueListPage(ft.Container):
@@ -67,6 +67,7 @@ class RevenueListPage(ft.Container):
         if is_user_need_login():
             self.login_dialog.open_dialog(True)
             self.page.open(self.login_dialog)
+
 
 
 class BilibiliLoginDialog(ft.AlertDialog):
