@@ -3,6 +3,7 @@
 # 2. Revenue List Page
 # 3. Save Revenue into db if user's token is valid
 """
+import time
 from urllib.parse import quote
 
 import flet as ft
@@ -21,7 +22,7 @@ class RevenueListPage(ft.Container):
         super().__init__()
         self.page = page
         self.login_dialog = BilibiliLoginDialog(self, page)
-
+        self.page.overlay.append(self.login_dialog)
         # 收益列表
         self.revenue_list = ft.DataTable(columns=[
             ft.DataColumn(ft.Text("First name")),
@@ -57,18 +58,15 @@ class RevenueListPage(ft.Container):
             self.revenue_list
         ])
 
-    def show_login_dialog(self):
-        """
-        显示登录对话框
-        """
-        self.page.open(self.login_dialog)
-
     def close_login_dialog(self):
         self.page.close(self.login_dialog)
+        self.login_dialog.open_dialog(False)
 
     def did_mount(self):
+        print("Running in RevenueListPage")
         if is_user_need_login():
-            self.show_login_dialog()
+            self.login_dialog.open_dialog(True)
+            self.page.open(self.login_dialog)
 
 
 class BilibiliLoginDialog(ft.AlertDialog):
@@ -79,50 +77,48 @@ class BilibiliLoginDialog(ft.AlertDialog):
         self.app = app
         self.page = page
         self.qrcode_info = None
+        self.has_login = False
+        self.in_login = False
         self.qrcode_key = None
-        self.qrcode_img = ft.Image()
+        self.qrcode_img = ft.Image(src="")
         self.scan_state = ft.Text(value=self.scan_state_dict[0])
-        self.content = [
+        self.content = ft.Column(controls=[
             ft.Text("扫码登录"),
             self.qrcode_img,
             self.scan_state
-        ]
-        self.running = False
+        ])
 
-    def did_mount(self):
-        """
-        每次加载的时候, 查询一次登录二维码
-        """
-        self.running = True
-        self.qrcode_info = generate_qr_code()
-        self.qrcode_key = self.qrcode_info["qrcode_key"]
-        self.qrcode_img = ft.Image(src=self.qrcode_info["qrcode"]) if self.qrcode_info else ft.Image()
-        self.page.run_thread(self.query_scan)
-
-    def will_unmount(self):
-        self.qrcode_img = ft.Image()
-        self.scan_state = ft.Text(value=self.scan_state_dict[0])
-        self.running = False
+    def open_dialog(self, open):
+        if open:
+            self.qrcode_info = generate_qr_code()
+            self.qrcode_key = self.qrcode_info["qrcode_key"]
+            self.qrcode_img.src = self.qrcode_info["qrcode"]
+            self.in_login = True
+            self.page.run_thread(self.query_scan)
+        else:
+            self.in_login = False
 
     def query_scan(self) -> None:
         """
         查询扫码结果
         """
-        while self.running:
+        while self.in_login:
             scan_state, url_ = poll_qr_code(self.qrcode_key)
             if scan_state == 0:
                 # 登录成功
                 self.scan_state.value = self.scan_state_dict[2]
+                time.sleep(1)
                 tokens = parse_login_url(url_)
                 session_data = quote(tokens["SESSDATA"])
                 save_token(session_data, tokens["Expires"])
-                self.running = False
+                self.in_login = False
             if scan_state == 86101:
                 # 未扫码
                 self.scan_state.value = self.scan_state_dict[0]
-                self.running = False
+                self.scan_state.update()
             if scan_state == 86090:
                 # 已扫码未确认
                 self.scan_state.value = self.scan_state_dict[1]
-                self.running = False
+                self.scan_state.update()
+            time.sleep(2)
         self.app.close_login_dialog()

@@ -46,3 +46,14 @@ def get_token():
     if result:
         return result[0], result[1]
     return None, None
+
+
+def clean_tokens():
+    """
+    清除所有 Token, 用于测试登录
+    """
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM bilibili_token")
+    conn.commit()
+    conn.close()

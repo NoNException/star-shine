@@ -4,6 +4,7 @@ from datetime import datetime
 import streamlit as st
 import requests
 
+from app.utils.app_utils import app_log
 from app.utils.bilibili_apis.bilibili_token_manager import (
     is_token_expired,
     is_token_near_expiry,
@@ -53,6 +54,7 @@ request_session = requests.Session()
 request_session.headers.update({"User-Agent": "MyCustomUserAgent/1.0"})
 
 
+@app_log
 def generate_qr_code() -> dict:
     """
     获取登录二维码

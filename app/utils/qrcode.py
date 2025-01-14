@@ -1,6 +1,6 @@
-from io import BytesIO
 import qrcode
-import streamlit as st
+
+from app.utils.app_utils import uuid_getter
 
 
 def create_qrcode(url: str):
@@ -11,7 +11,7 @@ def create_qrcode(url: str):
     )
     qr.add_data(url)
     img = qr.make_image(fill_color="black", back_color="white")
-    buffer = BytesIO()
-    img.save(buffer)
-    buffer.seek(0)
-    return buffer
+    file_path = f"/images/qrcodes/{uuid_getter()}.png"
+    file_name = f"assets/{file_path}"
+    img.save(file_name, format="PNG")
+    return file_path

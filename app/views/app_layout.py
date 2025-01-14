@@ -1,9 +1,7 @@
 import flet as ft
-from flet.core.textfield import TextField
 
-from app.views.navigation import SideBar
 from app.views.captain_view import CaptainView
-from app.views.info_panel import InfoPanel
+from app.views.navigation import SideBar
 from app.views.revenue_view import RevenueListPage
 
 

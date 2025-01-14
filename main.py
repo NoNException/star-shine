@@ -18,9 +18,7 @@ class StarShine(AppLayout):
 
         print(f"On route_change..{template_route.route}")
         for k, v in self.view_map.items():
-            print(k)
             if template_route.match(k):
-                print(k)
                 v()
         self.page.update()
 
