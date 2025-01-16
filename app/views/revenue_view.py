@@ -26,9 +26,10 @@ class RevenueListPage(ft.Container):
         self.page.overlay.append(self.login_dialog)
         # 收益列表
         self.revenue_list = ft.DataTable(columns=[
-            ft.DataColumn(ft.Text("First name")),
-            ft.DataColumn(ft.Text("Last name")),
-            ft.DataColumn(ft.Text("Age"), numeric=True),
+            ft.DataColumn(ft.Text("Name")),
+            ft.DataColumn(ft.Text("Time")),
+            ft.DataColumn(ft.Text("Gift")),
+            ft.DataColumn(ft.Text("Golds"), numeric=True),
         ], rows=[
             ft.DataRow(
                 cells=[
@@ -52,9 +53,15 @@ class RevenueListPage(ft.Container):
                 ],
             ),
         ], )
-
+        self.filters = ft.Row(controls=[
+            ft.TextField(label="舰长", width=200),
+            ft.TextField(label="收益(S)", width=200),
+            ft.TextField(label="收益(E)", width=200),
+            ft.TextField(label="时间(S)", width=200),
+            ft.TextField(label="时间(E)", width=200),
+        ]),
         self.content = ft.Column(controls=[
-            ft.TextField("请输入收益", width=200),
+            self.filters,
             ft.Divider(),
             self.revenue_list
         ])
@@ -69,18 +76,23 @@ class RevenueListPage(ft.Container):
             self.login_dialog.open_dialog(True)
             self.page.open(self.login_dialog)
         else:
+            filter_values = [c.values for c in self.filters.controls]
             rows, count = query_revenues(
                 {
-                    "start_time": date_start,
-                    "unmae": user_name,
-                    "min_gold": amt_start,
-                    "max_gold": amt_end,
-                    "end_time": date_end,
-                    "gift_name": gift_name,
+                    "uname": filter_values[0],
+                    "start_time": filter_values[1],
+                    "end_time": filter_values[2],
+                    "min_gold": filter_values[3],
+                    "max_gold": filter_values[5],
+                    "gift_name": filter_values[4],
                 },
                 limit=10,
                 offset=0,
             )
+            self.revenue_list.rows = rows
+
+    def to_data_cell(self):
+        pass
 
 
 class BilibiliLoginDialog(ft.AlertDialog):
