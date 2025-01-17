@@ -3,6 +3,8 @@ from sqlite3 import Error
 import requests
 from pandas.core.frame import itertools
 
+from app.utils.app_utils import app_log
+
 GIFTTYPE_API = "https://api.live.bilibili.com/gift/v1/master/getGiftTypes"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
 REVENUE_API = "https://api.live.bilibili.com/xlive/revenue/v1/giftStream/getReceivedGiftStreamNextList"
@@ -17,7 +19,7 @@ request_session.headers.update(
 )
 
 
-def get_gitft_types():
+def get_gift_types():
     """获取到礼物类型
     return: 礼物类型
     """
@@ -27,10 +29,12 @@ def get_gitft_types():
     return rep.json()
 
 
+@app_log
 def query_revenue_list(date, session_data: str, page_size=20):
     """
-    调取 bilibil 的接口, 获取指定天数
+    调取 bilibili 的接口, 获取指定天数
     :param date: 需要查询的日期
+    :param session_data: session_data
     :param page_size: 每页查询数量
     return: 礼物列表
     """

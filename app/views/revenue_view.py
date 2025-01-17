@@ -4,14 +4,36 @@
 # 3. Save Revenue into db if user's token is valid
 """
 import time
+from cProfile import label
 from urllib.parse import quote
 
 import flet as ft
 
-from app.service.revenue_service import is_user_need_login
+from app.assets.data_class import Revenue
+from app.service.revenue_service import bilibili_sync
 from app.utils.daos.login_db import save_token
-from app.service.bilibili_login_service import parse_login_url, poll_qr_code, generate_qr_code
+from app.service.bilibili_login_service import parse_login_url, poll_qr_code, generate_qr_code, is_user_need_login
 from app.utils.daos.revenue_db import query_revenues
+
+
+def to_data_cell(revenue: Revenue):
+    """
+    将数据转换为DataCell
+
+    Args:
+        revenue (Revenue): _description_
+    Return:
+        将用户信息
+    """
+    print(revenue)
+    return ft.DataRow(
+        cells=[
+            ft.DataCell(ft.Text(revenue.uname)),
+            ft.DataCell(ft.Text(revenue.time)),
+            ft.DataCell(ft.Text(f"{revenue.gift_num}/{revenue.gift_name}")),
+            ft.DataCell(ft.Text(revenue.gold)),
+        ],
+    )
 
 
 class RevenueListPage(ft.Container):
@@ -24,44 +46,31 @@ class RevenueListPage(ft.Container):
         self.page = page
         self.login_dialog = BilibiliLoginDialog(self, page)
         self.page.overlay.append(self.login_dialog)
-        # 收益列表
+        # # 收益列表
         self.revenue_list = ft.DataTable(columns=[
             ft.DataColumn(ft.Text("Name")),
             ft.DataColumn(ft.Text("Time")),
             ft.DataColumn(ft.Text("Gift")),
             ft.DataColumn(ft.Text("Golds"), numeric=True),
-        ], rows=[
-            ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text("John")),
-                    ft.DataCell(ft.Text("Smith")),
-                    ft.DataCell(ft.Text("43")),
-                ],
-            ),
-            ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text("Jack")),
-                    ft.DataCell(ft.Text("Brown")),
-                    ft.DataCell(ft.Text("19")),
-                ],
-            ),
-            ft.DataRow(
-                cells=[
-                    ft.DataCell(ft.Text("Alice")),
-                    ft.DataCell(ft.Text("Wong")),
-                    ft.DataCell(ft.Text("25")),
-                ],
-            ),
-        ], )
+        ], rows=[], )
         self.filters = ft.Row(controls=[
             ft.TextField(label="舰长", width=200),
             ft.TextField(label="收益(S)", width=200),
             ft.TextField(label="收益(E)", width=200),
             ft.TextField(label="时间(S)", width=200),
             ft.TextField(label="时间(E)", width=200),
-        ]),
+        ])
+        self.sync_start_time = ft.TextField(label="Start Time")
+        self.sync_end_time = ft.TextField(label="End Time")
         self.content = ft.Column(controls=[
             self.filters,
+            ft.Row(controls=[
+                ft.OutlinedButton("Export2Excel",on_click=lambda e: print("Export2Excel")),
+                ft.OutlinedButton("SyncFormBiliBili", on_click=lambda e: bilibili_sync(
+                    self.sync_start_time.value, self.sync_end_time.value
+                )),
+                self.sync_start_time, self.sync_end_time
+            ]),
             ft.Divider(),
             self.revenue_list
         ])
@@ -73,26 +82,27 @@ class RevenueListPage(ft.Container):
     def did_mount(self):
         print("Running in RevenueListPage")
         if is_user_need_login():
+            # 打开登录页面
             self.login_dialog.open_dialog(True)
             self.page.open(self.login_dialog)
         else:
-            filter_values = [c.values for c in self.filters.controls]
+            # 获取最新的收益列表
+            print("Start query revenue list")
+            filter_values = [None if c.value == '' else c.value for c in self.filters.controls]
             rows, count = query_revenues(
                 {
                     "uname": filter_values[0],
                     "start_time": filter_values[1],
                     "end_time": filter_values[2],
                     "min_gold": filter_values[3],
-                    "max_gold": filter_values[5],
-                    "gift_name": filter_values[4],
+                    "max_gold": filter_values[4],
+                    # "gift_name": filter_values[4],
                 },
                 limit=10,
                 offset=0,
             )
-            self.revenue_list.rows = rows
-
-    def to_data_cell(self):
-        pass
+            self.revenue_list.rows = [to_data_cell(r) for r in rows]
+            self.update()
 
 
 class BilibiliLoginDialog(ft.AlertDialog):

@@ -1,11 +1,14 @@
+from datetime import datetime
+
 import requests
 
 from app.utils.app_utils import app_log
+from app.utils.daos.login_db import get_token
 from app.utils.qrcode import create_qrcode
-
 
 request_session = requests.Session()
 request_session.headers.update({"User-Agent": "MyCustomUserAgent/1.0"})
+
 
 def parse_login_url(url):
     from urllib.parse import parse_qs, urlparse
@@ -45,3 +48,16 @@ def generate_qr_code() -> dict:
             "qrcode_key": qrcode_key
         }
     raise Exception("Failed to generate QR code.")
+
+
+def is_user_need_login():
+    """
+    检查用户是否需要登录
+    """
+    token, expire_at = get_token()
+    if not token or not expire_at or datetime.now().timestamp() > float(expire_at):
+        print("Need user login....")
+        return True
+
+    print("don't need user login....")
+    return False

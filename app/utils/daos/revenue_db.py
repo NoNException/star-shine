@@ -1,6 +1,10 @@
 from typing import List, Tuple
+
+from app.assets.data_class import Revenue
 from app.config import DATABASE_PATH
 import sqlite3
+
+from app.utils.app_utils import app_log
 
 
 def init_db():
@@ -36,12 +40,17 @@ def init_db():
     conn.close()
 
 
+# 初始化数据库
+init_db()
+
+
 # 插入直播数据
+@app_log
 def save_revenues(data):
     """插入数据"""
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
-    cursor.execute(
+    cursor.executemany(
         """
         INSERT INTO t_revenue (
             id, uid, uname, time, is_empty, gift_id, gift_name, gift_img, gift_num,
@@ -49,21 +58,20 @@ def save_revenues(data):
             ios_gold, normal_gold, is_hybrid, is_open_platfrom,
             open_platfrom_rate, receive_title, room_id
         ) VALUES (
-            :id, :uid, :uname, :time, :is_empty, :gift_id, :gift_name, :gift_img, :gift_num,
+            :id, :uid, :uname, :time, 0, :gift_id, :gift_name, :gift_img, :gift_num,
             :hamster, :gold, :silver, :ios_hamster, :normal_hamster,
             :ios_gold, :normal_gold, :is_hybrid, :is_open_platfrom,
             :open_platfrom_rate, :receive_title, :room_id
         )
-    """,
-        data,
-    )
+    """, data)
     conn.commit()
     conn.close()
 
 
+@app_log
 def query_revenues(
-    filters=None, limit=10, offset=0, order_by="time", order_direction="DESC"
-) -> Tuple[List, int]:
+        filters=None, limit=10, offset=0, order_by="time", order_direction="DESC"
+) -> tuple[List[Revenue], int]:
     """
     按照条件组合查询直播数据，支持分页和自定义排序。
 
@@ -94,28 +102,28 @@ def query_revenues(
     conditions = ""
     # 添加过滤条件
     if filters:
-        if "start_time" in filters:
+        if "start_time" in filters and filters["start_time"] is not None:
             conditions += " AND time >= :start_time"
             params["start_time"] = filters["start_time"]
-        if "end_time" in filters:
+        if "end_time" in filters and filters["end_time"] is not None:
             conditions += " AND time < :end_time"
             params["end_time"] = filters["end_time"]
-        if "gift_name" in filters:
+        if "gift_name" in filters and filters["gift_name"] is not None:
             conditions += " AND gift_name LIKE :gift_name"
             params["gift_name"] = f"%{filters['gift_name']}%"
-        if "uid" in filters:
+        if "uid" in filters and filters["uid"] is not None:
             conditions += " AND uid = :uid"
             params["uid"] = filters["uid"]
-        if "uname" in filters:
+        if "uname" in filters and filters["uname"] is not None:
             conditions += " AND uname LIKE :uname"
             params["uname"] = f"%{filters['uname']}%"
-        if "min_gold" in filters:
+        if "min_gold" in filters and filters["min_gold"] is not None:
             conditions += " AND gold >= :min_gold"
             params["min_gold"] = filters["min_gold"]
-        if "max_gold" in filters:
+        if "max_gold" in filters and filters["max_gold"] is not None:
             conditions += " AND gold <= :max_gold"
             params["max_gold"] = filters["max_gold"]
-        if "gift_id" in filters:
+        if "gift_id" in filters and filters["gift_id"] is not None:
             conditions += " AND gift_id = :gift_id"
             params["gift_id"] = filters["gift_id"]
 
@@ -130,9 +138,9 @@ def query_revenues(
     # 执行查询
     cursor.execute(query, params)
     rows = cursor.fetchall()
-    count_query = " select count(1) from t_revenue "
+    count_query = " select count(1) from t_revenue WHERE 1=1 "
     count_query += conditions
     cursor.execute(count_query, params)
     count = cursor.fetchone()
     conn.close()
-    return [dict(row) for row in rows], count
+    return [Revenue(**dict(row)) for row in rows], count

@@ -35,13 +35,21 @@ def days_to_birthday(birthday):
 @dataclass
 class Revenue:
     id: int
+    # Revenue ID
     uid: int
+    # 用户名称
     uname: str
+    # 例如提交时间 日期
     time: str
+    # 是否空数据
     is_empty: bool
+    # 礼物 ID
     gift_id: int
+    # 礼物名称
     gift_name: str
+    # 礼物图片
     gift_img: str
+    # 礼物数量
     gift_num: int
     hamster: int
     gold: int
@@ -51,7 +59,7 @@ class Revenue:
     ios_gold: int
     normal_gold: int
     is_hybrid: bool
-    is_open_platform: int
-    open_platform_rate: float
+    is_open_platfrom: int
+    open_platfrom_rate: float
     receive_title: str
     room_id: int
