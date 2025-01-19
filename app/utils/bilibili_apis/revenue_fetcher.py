@@ -3,9 +3,9 @@ from sqlite3 import Error
 import requests
 from pandas.core.frame import itertools
 
-from app.utils.app_utils import app_log
+from app.utils.app_utils.common_utils import app_log
 
-GIFTTYPE_API = "https://api.live.bilibili.com/gift/v1/master/getGiftTypes"
+GIFT_TYPE_API = "https://api.live.bilibili.com/gift/v1/master/getGiftTypes"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
 REVENUE_API = "https://api.live.bilibili.com/xlive/revenue/v1/giftStream/getReceivedGiftStreamNextList"
 
@@ -23,7 +23,7 @@ def get_gift_types():
     """获取到礼物类型
     return: 礼物类型
     """
-    rep = requests.get(GIFTTYPE_API)
+    rep = requests.get(GIFT_TYPE_API)
     if rep.status_code != 200:
         print(rep.content)
     return rep.json()

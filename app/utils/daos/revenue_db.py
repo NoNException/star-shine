@@ -4,7 +4,7 @@ from app.assets.data_class import Revenue
 from app.config import DATABASE_PATH
 import sqlite3
 
-from app.utils.app_utils import app_log
+from app.utils.app_utils.common_utils import app_log
 
 
 def init_db():
@@ -69,9 +69,9 @@ def save_revenues(data):
 
 
 @app_log
-def query_revenues(
-        filters=None, limit=10, offset=0, order_by="time", order_direction="DESC"
-) -> tuple[List[Revenue], int]:
+def query_revenues(limit=10, offset=0, order_by="time", order_direction="DESC",
+                   all=0, **filters) -> tuple[
+    List[Revenue], int]:
     """
     按照条件组合查询直播数据，支持分页和自定义排序。
 
@@ -89,6 +89,7 @@ def query_revenues(
     :param limit: 每页条数（默认 10 条）
     :param offset: 偏移量（默认 0，表示第一页）
     :param order_by: 排序字段（默认按 `time` 排序）
+    :param all: 1= 全部导出, 忽略分页参数
     :param order_direction: 排序方向，`ASC` 或 `DESC`（默认 `ASC`）
     :return: 查询结果列表
     """
@@ -130,10 +131,11 @@ def query_revenues(
     # 添加排序条件
     query = query + conditions + f" ORDER BY {order_by} {order_direction}"
 
-    # 添加分页条件
-    query += " LIMIT :limit OFFSET :offset"
-    params["limit"] = limit
-    params["offset"] = offset
+    if all == 0:
+        # 添加分页条件
+        query += " LIMIT :limit OFFSET :offset"
+        params["limit"] = limit
+        params["offset"] = offset
 
     # 执行查询
     cursor.execute(query, params)

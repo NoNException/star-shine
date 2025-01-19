@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from app.utils.app_utils import app_log
+from app.utils.app_utils.common_utils import app_log
 from app.utils.bilibili_apis.revenue_fetcher import query_revenue_list
 
 from app.utils.daos.login_db import get_token

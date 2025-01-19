@@ -2,7 +2,7 @@ from datetime import datetime
 
 import requests
 
-from app.utils.app_utils import app_log
+from app.utils.app_utils.common_utils import app_log
 from app.utils.daos.login_db import get_token
 from app.utils.qrcode import create_qrcode
 

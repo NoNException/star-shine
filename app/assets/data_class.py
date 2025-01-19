@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -33,33 +33,30 @@ def days_to_birthday(birthday):
 
 
 @dataclass
-class Revenue:
-    id: int
-    # Revenue ID
-    uid: int
-    # 用户名称
-    uname: str
-    # 例如提交时间 日期
-    time: str
-    # 是否空数据
-    is_empty: bool
-    # 礼物 ID
-    gift_id: int
-    # 礼物名称
-    gift_name: str
-    # 礼物图片
-    gift_img: str
-    # 礼物数量
-    gift_num: int
-    hamster: int
-    gold: int
-    silver: int
-    ios_hamster: int
-    normal_hamster: int
-    ios_gold: int
-    normal_gold: int
-    is_hybrid: bool
-    is_open_platfrom: int
-    open_platfrom_rate: float
-    receive_title: str
-    room_id: int
+class Revenue():
+    id: int = None
+    uid: int = None
+    uname: str = None
+    time: str = None
+    is_empty: bool = None
+    gift_id: int = None
+    gift_name: str = None
+    gift_img: str = None
+    gift_num: int = None
+    gold: int = None
+    silver: int = None
+    hamster: int = None
+    ios_hamster: int = None
+    normal_hamster: int = None
+    ios_gold: int = None
+    normal_gold: int = None
+    is_hybrid: bool = None
+    is_open_platfrom: int = None
+    open_platfrom_rate: float = None
+    receive_title: str = None
+    room_id: int = None
+
+
+if __name__ == '__main__':
+    revenue = Revenue(id=12)
+    print(revenue.__dict__)

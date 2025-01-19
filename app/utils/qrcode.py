@@ -1,6 +1,6 @@
 import qrcode
 
-from app.utils.app_utils import uuid_getter
+from app.utils.app_utils.common_utils import uuid_getter
 
 
 def create_qrcode(url: str):
