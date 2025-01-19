@@ -6,6 +6,9 @@ from datetime import datetime
 class UserInfo:
     id: int = None
     name: str = None
+    bilibili_user_id: int = None
+    # 头像名称
+    avatar_url: str = None
     birthday: str = None
     luna_birthday: str = None
     address: str = None
