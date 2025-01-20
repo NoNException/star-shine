@@ -4,6 +4,7 @@ from app.assets.data_class import Revenue
 from app.service.captain_service import user_to_birthday
 from app.service.revenue_service import days_gap
 from app.utils.app_utils.excel_utils import write_to_excel
+from app.utils.bilibili_apis.user_info_fetcher import get_user_details
 from app.utils.daos.login_db import clean_tokens, get_token
 from app.utils.qrcode import create_qrcode
 
@@ -34,3 +35,20 @@ class UserBirthdayTest(unittest.TestCase):
     def test_export_2_excel(self):
         write_to_excel("aa.xlsx", [Revenue(id=12)])
         self.assertTrue(True)
+
+    def test_user_ids_query(self):
+        user_ids = ['419106160']
+        token, _ = get_token()
+        user_details = get_user_details(user_ids, str(token))
+        self.assertIsNotNone(user_details)
+        if user_details:
+            for mid, details in user_details.items():
+                print(f"用户 MID: {mid}")
+                print(f"昵称: {details['name']}")
+                print(f"头像链接: {details['face']}")
+                print(f"认证信息: {details['official']['title']}")
+                print(f"会员状态: {'是' if details['vip']['status'] == 1 else '否'}")
+                print("-" * 40)
+
+
+

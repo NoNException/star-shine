@@ -46,7 +46,7 @@ def load_user_from_excel(excel_file_path: str, mode: str = "override"):
 
 def save_func(base_ids: List[int], users: DataFrame, mode):
     for index, row in users.iterrows():
-        user_id = int(row["id"])
+        user_id = int(row["id"]) if "id" in row.keys() else None
         row_indict = row.to_dict()
         if user_id in base_ids and mode == "override":
             update_user(UserInfo(**row_indict))

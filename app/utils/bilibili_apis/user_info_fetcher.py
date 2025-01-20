@@ -1,17 +1,40 @@
-"""
+from app.utils.app_utils.common_utils import app_log
+from app.utils.bilibili_apis.bilibili_requests import request_session
 
 
-https://api.bilibili.com/x/space/wbi/acc/info?
-mid:85592620;
-token:;
-platform:web;
-web_location:1550101;
-dm_img_list:[%7B%22x%22:2527,%22y%22:1123,%22z%22:0,%22timestamp%22:2,%22k%22:73,%22type%22:0%7D,%7B%22x%22:3853,%22y%22:1662,%22z%22:7,%22timestamp%22:82,%22k%22:89,%22type%22:0%7D];
-dm_img_str:V2ViR0wgMS4wIChPcGVuR0wgRVMgMi4wIENocm9taXVtKQ;
-dm_cover_img_str:QU5HTEUgKEFwcGxlLCBBTkdMRSBNZXRhbCBSZW5kZXJlcjogQXBwbGUgTTEgTWF4LCBVbnNwZWNpZmllZCBWZXJzaW9uKUdvb2dsZSBJbmMuIChBcHBsZS;
-dm_img_inter:%7B%22ds%22:[%7B%22t%22:0,%22c%22:%22bnByb2dyZXNzLWJ1c3%22,%22p%22:[162,54,54],%22s%22:[434,3815,5376]%7D],%22wh%22:[5096,3242,62],%22of%22:[309,618,309]%7D;
-w_webid:eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzcG1faWQiOiIzMzMuOTk5IiwiYnV2aWQiOiJBQzBGODJFOS01NTQxLTdGQUYtREYwQy1DMzk0NDUxMjg3QkMxODQ4NGluZm9jIiwidXNlcl9hZ2VudCI6Ik1vemlsbGEvNS4wIChNYWNpbnRvc2g7IEludGVsIE1hYyBPUyBYIDEwXzE1XzcpIEFwcGxlV2ViS2l0LzUzNy4zNiAoS0hUTUwsIGxpa2UgR2Vja28pIENocm9tZS8xMzEuMC4wLjAgU2FmYXJpLzUzNy4zNiIsImJ1dmlkX2ZwIjoiNGNkMTJkMzJkNmI4NmExOGRiOWRlZWU5OTBhMjA5NjciLCJiaWxpX3RpY2tldCI6ImV5SmhiR2NpT2lKSVV6STFOaUlzSW10cFpDSTZJbk13TXlJc0luUjVjQ0k2SWtwWFZDSjkuZXlKbGVIQWlPakUzTXpjMU5EYzFOallzSW1saGRDSTZNVGN6TnpJNE9ETXdOaXdpY0d4MElqb3RNWDAub3JpYWFSbHZ5T2RZWm5OQ09Ic0w5Ylg2ZWxucVFKWmFnd0lxbnFmMkptRSIsImNyZWF0ZWRfYXQiOjE3MzcyODg0NzIsInR0bCI6ODY0MDAsInVybCI6Ii84NTU5MjYyMCIsInJlc3VsdCI6MCwiaXNzIjoiZ2FpYSIsImlhdCI6MTczNzI4ODQ3Mn0.X3bbuOnvCdKn_ROohrdZDW45JqX0spBddPUYE167j5-zV-8zXEZTbBzCyDHPua3lsPxXhut4hA52fr6ovh6i0xEgAr2m8zo8C1cfXDYpXr-fnHSxijAsRGBP1t0qycdXK5suTAHgGppwMdP0XkzV1c4Ekaq37K3fcSiR82jyQibQNrtqxt0aw2RpBQ-p59Txi6EKDlxW5FN60aql76whCSywWbL8X1_eN0bwGGs2k99e-bX2-Nu-FYSzcKuLbqqdz-ky2STCBe8zhkwNKNNSuiWY4s4DqJMlWjesSQ8lOQNWjTJ8dXlK91MrWOfIiBUlXoidFGXuZdTcEKLonOg3tA;
-w_rid:c3fe4b00442a91589ac1de334881c399;
-wts:1737288473
+@app_log
+def get_user_details(u_ids: list[str], session_data: str):
+    """
+    获取指定用户的详细信息。
 
-"""
+    参数：
+    uids (list): 用户的 mid 列表，每个 mid 为字符串类型。
+
+    返回：
+    dict: 包含用户详细信息的字典。
+    """
+    # 将用户 mid 列表转换为逗号分隔的字符串
+    uids_str = ','.join(u_ids)
+    # Bilibili 多用户详细信息 API 的 URL
+    url = 'https://api.bilibili.com/x/polymer/pc-electron/v1/user/cards'
+    # 定义请求参数
+    params = {
+        'uids': uids_str
+    }
+    cookie = {"SESSDATA": session_data}
+    try:
+        # 发送 GET 请求
+        response = request_session.get(url, params=params, cookies=cookie)
+        # 检查响应状态码
+        if response.status_code == 200:
+            data = response.json()
+            if data['code'] == 0:
+                user_data = data['data']
+                return [(k, d['name'], d['face']) for k, d in user_data.items()]
+            else:
+                print(f"API 返回错误：{data['message']}")
+        else:
+            print(f"请求失败，状态码：{response.status_code}")
+    except request_session.RequestException as e:
+        print(f"请求过程中发生错误：{e}")
+    return None
