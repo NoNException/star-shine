@@ -46,16 +46,29 @@ def insert_user(user_info: UserInfo):
 
 # 查询所有用户
 @app_log
-def fetch_users() -> List[UserInfo]:
+def fetch_users(order_by="id", desc=True,
+                limit=5,
+                query_all=False,
+                fuzz_query=None) -> List[UserInfo]:
     """
      获取全部的用户
-    :param parser: 是否进行类型转换, True 则转换成 List[UserInfo]
-
+    :param order_by:
+    :param desc: 是否倒序排列
+    :param limit: 数量限制
+    :param query_all: 是否获取全部
+    :param fuzz_query: 查询条件
     :return: List[UserInfo]
     """
 
     conn = sqlite3.connect(DATABASE_PATH)
-    df = pd.read_sql_query("SELECT * FROM t_user", conn)
+    where_condition = (f"WHERE name like '%{fuzz_query}%' or address like '%{fuzz_query}%' "
+                       f"or phone like '%{fuzz_query}%' or bilibili_user_id like '%{fuzz_query}%' "
+                       f"group by bilibili_user_id ") \
+        if fuzz_query else ""
+
+    sql = f"SELECT * FROM t_user {where_condition}" if query_all else \
+        f"SELECT * FROM t_user {where_condition}  order by {order_by} {'desc' if desc else ''} limit {limit}"
+    df = pd.read_sql_query(sql, conn)
     conn.close()
     users = [UserInfo(**(row)) for row in df.to_dict(orient='records')]
     return users

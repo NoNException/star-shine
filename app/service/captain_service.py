@@ -24,7 +24,7 @@ def user_to_birthday(days: int) -> List[UserInfo]:
     """
     获取未来 days 天内过生日的用户
     """
-    users = fetch_users()
+    users = fetch_users(query_all=True)
     # 日期格式转换
     upcoming_users: List[UserInfo] = [u for u in users if u.birthday_in_range(days)]
     return upcoming_users

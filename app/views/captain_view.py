@@ -5,9 +5,7 @@ import flet as ft
 from flet.core.types import MainAxisAlignment, CrossAxisAlignment
 
 from app.assets.data_class import UserInfo
-from app.config import DATABASE_PATH
 from app.service.captain_service import user_to_birthday, load_user_from_excel
-from app.service.revenue_service import bilibili_sync
 from app.utils.bilibili_apis.user_info_fetcher import get_user_details
 from app.utils.daos.login_db import get_token
 from app.utils.daos.user_db import fetch_users, update_user, insert_user, delete_user
@@ -35,13 +33,29 @@ class CaptainView(ft.Column):
         )
         page.overlay.append(file_picker)
         self.file_list = ft.Row(alignment=ft.MainAxisAlignment.START)
+
+        def handle_submit(e):
+            print(f"handle_submit e.data: {e.data}")
+
+        def handle_tap(e):
+            self.user_search.open_view()
+
+        self.user_search_lv = ft.ListView(controls=self.query_base_user())
+        self.user_search = ft.SearchBar(
+            view_elevation=4,
+            bar_hint_text="Search Users...",
+            view_hint_text="Choose a user from the suggestions...",
+            on_change=self.handle_change,
+            on_submit=handle_submit,
+            on_tap=handle_tap,
+            controls=[self.user_search_lv]
+        )
+
         user_operations = ft.Row(
             alignment=ft.MainAxisAlignment.START,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                ft.TextButton(
-                    text="查询", on_click=self.find_by_name,
-                ),
+                self.user_search,
                 ft.CupertinoButton(icon=ft.Icons.ADD, on_click=self.open_user_panel),
                 ft.CupertinoButton(
                     icon=ft.Icons.UPLOAD,
@@ -56,7 +70,7 @@ class CaptainView(ft.Column):
             position=ft.NavigationDrawerPosition.END,
             controls=[UserAdder(self, self.page, user_info=None)],
         )
-        self.user_list = UserList(self, fetch_users())
+        self.user_list = UserList(self, fetch_users(query_all=True))
 
         self.user_filter = ft.Tabs(selected_index=0, on_change=self.apply_tabs_change,
                                    tabs=[ft.Tab(text="All"), ft.Tab(text="3Days"), ft.Tab(text="7Days"),
@@ -69,6 +83,43 @@ class CaptainView(ft.Column):
             self.user_list,
         ]
 
+    # User Search Actions
+    def close_anchor(self, e):
+        """
+        关闭抽屉
+        """
+        user: UserInfo = e.control.data
+        self.user_list.apply_filter(users=[user])
+        self.user_search.bar_hint_text = user.name
+        self.user_search.close_view()
+
+    def handle_change(self, e):
+        user_name = e.data
+        users = fetch_users(fuzz_query=user_name, query_all=True)
+        final_list = [ft.ListTile(title=ft.Text(f"{u.name}"), on_click=self.close_anchor, data=u) for u in users]
+        final_list.append(ft.ListTile(title=ft.Text("Clear..."), on_click=self.clear_search, data=None))
+        self.user_search_lv.controls.clear()
+        for f in final_list:
+            self.user_search_lv.controls.append(f)
+        self.user_search_lv.update()
+
+    def clear_search(self, e):
+        """
+        清除搜索框
+        """
+        self.user_search.bar_hint_text = "Search Users..."
+        self.user_filter.selected_index = 0
+        self.user_search.close_view()
+        self.user_list.apply_filter(fileter_name="")
+        self.user_filter.update()
+
+    def query_base_user(self):
+        users = fetch_users(order_by="name", desc=True, limit=7)
+        final_list = [ft.ListTile(title=ft.Text(f"{u.name}"), on_click=self.close_anchor, data=u) for u in users]
+        final_list.append(ft.ListTile(title=ft.Text("Clear..."), on_click=self.clear_search, data=None))
+        return final_list
+
+    # User filter Actions
     def apply_tabs_change(self, e):
         """
         应用 filter , 筛选用户
@@ -104,9 +155,6 @@ class CaptainView(ft.Column):
     def batch_save_captains(self, file_path: str, mode="override"):
         load_user_from_excel(file_path, mode)
         self.update()
-
-    def find_by_name(self, e):
-        pass
 
     def open_user_panel(self, e, user_info: UserInfo = None):
         """
@@ -146,19 +194,25 @@ class UserList(ft.Container):
 
     def did_mount(self):
         # 在每次加载 panel 的时候, 查询用户信息
-        self.users = fetch_users()
+        self.users = fetch_users(query_all=True)
         self.grid_view.controls = self.user_card_builder(self.users)
 
-    def apply_filter(self, fileter_name):
-        day_filter_map = {
-            "3Days": 3, "7Days": 7, "In Months": 30
-        }
-        users = fetch_users() if fileter_name not in day_filter_map.keys() else user_to_birthday(
-            day_filter_map[fileter_name])
+    def apply_filter(self, fileter_name=None, users: list[UserInfo] = None):
+        if not users or len(users) == 0:
+            day_filter_map = {
+                "3Days": 3, "7Days": 7, "In Months": 30
+            }
+            users = user_to_birthday(day_filter_map[fileter_name]) if fileter_name in day_filter_map.keys() \
+                else fetch_users(query_all=True)
         self.grid_view.controls = self.user_card_builder(users)
         self.update()
 
     def user_card_builder(self, users: List[UserInfo]) -> List[ft.Card]:
+        """
+        构建用户卡片
+        :param users: 用户列表
+        :return: List[ft.Card]
+        """
         user_cards = [
             ft.Card(content=self.render_user_card(u), ) for u in users
         ]
