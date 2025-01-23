@@ -1,6 +1,6 @@
 import flet as ft
 
-from app.views.captain_view import CaptainView
+from app.views.captain_views.captain_view import CaptainUserView
 from app.views.navigation import SideBar
 from app.views.revenue_view import RevenueListPage
 
@@ -13,7 +13,7 @@ class AppLayout(ft.Row):
         # 左侧导航栏
         self.nav_bar = SideBar(app, page)
         # 中间操作栏
-        self.captain_view = CaptainView(page)
+        self.captain_view = CaptainUserView(page)
         self.revenue_view = RevenueListPage(page)
         # 右侧信息栏
         self.expand = True
