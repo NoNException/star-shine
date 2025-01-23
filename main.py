@@ -23,6 +23,11 @@ class StarShine(AppLayout):
         self.page.update()
 
 
+def command(e, page):
+    if e.data == "--r":
+        page
+
+
 def main(page: ft.Page):
     # 设置页面标题和布局
     page.title = "Star Shine"
@@ -34,8 +39,7 @@ def main(page: ft.Page):
     # 加载主页
     home_page = StarShine(page)
     page.add(home_page,
-             ft.TextField(label="Standard")
-             )
+             ft.TextField(label="Command Panel", on_submit=lambda e: command(e, page)))
     # 运行应用
     page.update()
 

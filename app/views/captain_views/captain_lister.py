@@ -56,18 +56,23 @@ class UserListView(ft.Container):
         """
         渲染用户卡片
         """
-        return ft.Row(
-            alignment=MainAxisAlignment.START,
-            vertical_alignment=CrossAxisAlignment.CENTER,
-            controls=[
-                ft.CircleAvatar(radius=25,
-                                max_radius=200,
-                                foreground_image_src=user.avatar_url,
-                                ),
-                ft.Column(
-                    alignment=MainAxisAlignment.CENTER,
-                    controls=[ft.Text(user.name), ft.Text(user.birthday)],
-                ),
-                ft.TextButton(text="修改", on_click=lambda e: self.app.open_user_panel(e, user)),
-            ],
+        return ft.Container(
+
+            content=ft.Row(
+                alignment=MainAxisAlignment.START,
+                vertical_alignment=CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.CircleAvatar(radius=25,
+                                    foreground_image_src=user.avatar_url,
+                                    ),
+                    ft.Column(
+                        alignment=MainAxisAlignment.CENTER,
+                        controls=[ft.Text(user.name), ft.Text(user.birthday)],
+                    ),
+                ],
+            ),
+            margin=2,
+            ink=True,
+            padding=2,
+            on_click=lambda e: self.app.open_user_panel(e, user)
         )
