@@ -1,9 +1,8 @@
 from datetime import datetime
 
 import flet as ft
-from altair import value
+from docutils.nodes import label
 from flet.core.types import CrossAxisAlignment
-from h11 import ERROR
 from lunar_python import Lunar
 
 from app.assets.data_class import UserInfo
@@ -12,7 +11,7 @@ from app.utils.daos.login_db import get_token
 from app.utils.daos.user_db import delete_user, update_user, insert_user
 
 
-class UserAdder(ft.Container):
+class UserModifier(ft.Container):
     """用户添加 panel"""
 
     def __init__(self, app, page: ft.Page, user_info: UserInfo = None):
@@ -48,7 +47,7 @@ class UserAdder(ft.Container):
         def _setter(name):
             self.user_info.name = name.control.value
 
-        return ft.TextField(icon=ft.Text("昵称"), value=self.user_info.name, on_blur=lambda e: _setter(e.data))
+        return ft.TextField(label='昵称', value=self.user_info.name, on_blur=lambda e: _setter(e.data))
 
     @user_nick_name.setter
     def user_nick_name(self, name):
@@ -56,7 +55,7 @@ class UserAdder(ft.Container):
 
     @property
     def user_bilibili_id(self):
-        return ft.TextField(icon=ft.Text("MID"),
+        return ft.TextField(label='MID',
                             value=str(self.user_info.bilibili_user_id), hint_text="输入 MID, 回车确认",
                             on_submit=lambda e: self.fetch_user_bilibili_info(e))
 
@@ -80,8 +79,8 @@ class UserAdder(ft.Container):
                 birthday_tf.value = ""
                 birthday_tf.update()
 
-        birthday_tf = ft.TextField(icon=ft.Text("生日"), value=self.user_info.birthday,
-                                   label="年份(可选)月份/日期", hint_text=today_str,
+        birthday_tf = ft.TextField(value=self.user_info.birthday,
+                                   label="生日(阳历)", hint_text=today_str,
                                    on_blur=lambda e: _setter(e))
         return birthday_tf
 
@@ -98,12 +97,12 @@ class UserAdder(ft.Container):
             try:
                 luna_birthday_showing = str4luna(luna_birthday_str)
                 if luna_birthday_showing is None:
-                    return
+                    raise Exception()
                 luna_birthday_tf.value = luna_birthday_showing
                 luna_birthday_tf.update()
                 self.user_luna_birthday = luna_birthday_str
             except Exception as e:
-                luna_birthday_tf.error_text = "日期格式错误, 请输入 YYYY/MM/DD"
+                luna_birthday_tf.helper_text = "日期格式错误, 请输入 01/02 或 2000/01/02. 即闰2月=-2。"
                 luna_birthday_tf.value = str4luna(self.user_info.luna_birthday)
                 luna_birthday_tf.update()
 
@@ -118,17 +117,19 @@ class UserAdder(ft.Container):
                         f"{luna_date.getMonthInChinese()}月/{luna_date.getDayInChinese()}")
             except Exception as e:
                 print(e)
+                # TODO 统一异常报错显示
                 return None
 
         def show_luna_number():
             luna_birthday_tf.value = self.user_info.luna_birthday
             luna_birthday_tf.update()
 
-        luna_birthday_tf = ft.TextField(icon=ft.Text('农历'), label="年份(可选)月份/日期",
+        luna_birthday_tf_value = str4luna(self.user_info.luna_birthday)
+        luna_birthday_tf = ft.TextField(label="生日(农历)",
                                         hint_text=self.default_luna_str(),
-                                        helper_text="月份农历为1到12，闰月为负，即闰2月=-2。",
+                                        helper_text="月份农历为1到12，闰月为负，即闰2月=-2。" if luna_birthday_tf_value is None else None,
                                         on_focus=lambda e: show_luna_number(),
-                                        value=str4luna(self.user_info.luna_birthday), on_blur=lambda e: _setter(e))
+                                        value=luna_birthday_tf_value, on_blur=lambda e: _setter(e))
         return luna_birthday_tf
 
     @staticmethod
@@ -149,7 +150,7 @@ class UserAdder(ft.Container):
         def _setter(address):
             self.user_address = address.control.value
 
-        return ft.TextField(icon=ft.Text("地址"), value=self.user_info.address if self.user_info.address else "",
+        return ft.TextField(label="地址(省市区)", value=self.user_info.address if self.user_info.address else "",
                             on_blur=lambda e: _setter(e))
 
     @user_address.setter
@@ -161,7 +162,7 @@ class UserAdder(ft.Container):
         def _setter(phone):
             self.user_phone = phone.control.value
 
-        return ft.TextField(icon=ft.Text("电话"), value=self.user_info.phone if self.user_info.phone else "",
+        return ft.TextField(label="电话", value=self.user_info.phone if self.user_info.phone else "",
                             on_blur=lambda e: _setter(e))
 
     @user_phone.setter

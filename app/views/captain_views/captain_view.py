@@ -4,7 +4,7 @@ from app.assets.data_class import UserInfo
 from app.service.captain_service import load_user_from_excel
 from app.utils.daos.user_db import fetch_users
 from app.views.captain_views.captain_lister import UserListView
-from app.views.captain_views.captain_modifier import UserAdder
+from app.views.captain_views.captain_modifier import UserModifier
 
 
 class CaptainUserView(ft.Column):
@@ -64,7 +64,7 @@ class CaptainUserView(ft.Column):
         )
         self.user_info_drawer = ft.NavigationDrawer(
             position=ft.NavigationDrawerPosition.END,
-            controls=[UserAdder(self, self.page, user_info=None)],
+            controls=[UserModifier(self, self.page, user_info=None)],
         )
         self.user_list = UserListView(self, fetch_users(query_all=True))
 
@@ -157,16 +157,16 @@ class CaptainUserView(ft.Column):
         添加/修改用户
         """
         if user_info:
-            self.user_info_drawer.controls = [UserAdder(self, self.page, user_info=user_info)]
+            self.user_info_drawer.controls = [UserModifier(self, self.page, user_info=user_info)]
         else:
-            self.user_info_drawer.controls = [UserAdder(self, self.page)]
+            self.user_info_drawer.controls = [UserModifier(self, self.page)]
         self.page.open(self.user_info_drawer)
 
     def close_end_drawer(self, e):
         """
         关闭抽屉
         """
-        self.user_info_drawer.controls = [UserAdder(self, self.page)]
+        self.user_info_drawer.controls = [UserModifier(self, self.page)]
         self.page.close(self.user_info_drawer)
 
 
