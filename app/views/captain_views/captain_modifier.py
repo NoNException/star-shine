@@ -102,7 +102,7 @@ class UserModifier(ft.Container):
                 luna_birthday_tf.update()
                 self.user_luna_birthday = luna_birthday_str
             except Exception as e:
-                luna_birthday_tf.helper_text = "日期格式错误, 请输入 01/02 或 2000/01/02. 即闰2月=-2。"
+                luna_birthday_tf.helper_text = "日期格式错误, 请输入01/02或2000/01/02. 即闰2月=-2。"
                 luna_birthday_tf.value = str4luna(self.user_info.luna_birthday)
                 luna_birthday_tf.update()
 
