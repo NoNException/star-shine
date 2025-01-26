@@ -21,6 +21,7 @@ def init_user_db():
             birthday TEXT ,
             luna_birthday TEXT ,
             address TEXT,
+            address_detail TEXT,
             phone TEXT 
         )
     """)
@@ -35,8 +36,8 @@ def insert_user(user_info: UserInfo):
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO t_user (id, name, bilibili_user_id, avatar_url, birthday, luna_birthday, address, phone)
-        VALUES (:id, :name, :bilibili_user_id ,:avatar_url, :birthday, :luna_birthday, :address, :phone)
+        INSERT INTO t_user (id, name, bilibili_user_id, avatar_url, birthday, luna_birthday, address,address_detail, phone)
+        VALUES (:id, :name, :bilibili_user_id ,:avatar_url, :birthday, :luna_birthday, :address, :address_detail, :phone)
     """,
         asdict(user_info),
     )
@@ -88,6 +89,7 @@ def update_user(user_info: UserInfo):
         birthday = :birthday,
         luna_birthday= :luna_birthday, 
         address = :address, 
+        address_detail = :address_detail,
         phone = :phone
         WHERE id = :id
     """,

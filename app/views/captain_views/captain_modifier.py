@@ -1,14 +1,15 @@
 from datetime import datetime
 
 import flet as ft
-from docutils.nodes import label
 from flet.core.types import CrossAxisAlignment
 from lunar_python import Lunar
 
 from app.assets.data_class import UserInfo
+from app.utils.badu_apis.address_auto_recognize import address_recognition
 from app.utils.bilibili_apis.user_info_fetcher import get_user_details
 from app.utils.daos.login_db import get_token
 from app.utils.daos.user_db import delete_user, update_user, insert_user
+from demos.demo_trello import TrelloApp
 
 
 class UserModifier(ft.Container):
@@ -90,7 +91,6 @@ class UserModifier(ft.Container):
 
     @property
     def user_luna_birthday(self):
-        luna_str = self.default_luna_str()
 
         def _setter(luna_birthday):
             luna_birthday_str = luna_birthday.control.value
@@ -116,8 +116,7 @@ class UserModifier(ft.Container):
                 return (f"{f'{luna_date.getYearInChinese()}年/' if len(date_time) == 3 else ""}"
                         f"{luna_date.getMonthInChinese()}月/{luna_date.getDayInChinese()}")
             except Exception as e:
-                print(e)
-                # TODO 统一异常报错显示
+                print(e, "str4luna")
                 return None
 
         def show_luna_number():
@@ -147,15 +146,23 @@ class UserModifier(ft.Container):
 
     @property
     def user_address(self):
-        def _setter(address):
-            self.user_address = address.control.value
-
-        return ft.TextField(label="地址(省市区)", value=self.user_info.address if self.user_info.address else "",
-                            on_blur=lambda e: _setter(e))
+        # 地址不可编辑
+        return ft.TextField(label="地址(省市区)", value=self.user_info.address if self.user_info.address else ""
+                            , read_only=True)
 
     @user_address.setter
     def user_address(self, address):
         self.user_info.address = address
+
+    @property
+    def user_address_detail(self):
+        return ft.TextField(label="详细地址",
+                            value=self.user_info.address_detail if self.user_info.address_detail else "",
+                            read_only=True)
+
+    @user_address_detail.setter
+    def user_address_detail(self, address_detail):
+        self.user_info.address_detail = address_detail
 
     @property
     def user_phone(self):
@@ -169,21 +176,50 @@ class UserModifier(ft.Container):
     def user_phone(self, phone):
         self.user_info.phone = phone
 
+    def recognize_address(self, e):
+        # user's address recognize function , by baidu api,
+        detail_tf = ft.TextField(min_lines=3, multiline=True,
+                                 hint_text="输入:浙江省杭州市下沙区 粽子 1711111111 \n开启智能识别")
+        address_tf = ft.TextField(label="地址(省市区)",
+                                  value=self.user_info.address if self.user_info.address else "")
+        address_detail_tf = ft.TextField(label="详细地址",
+                                         value=self.user_info.address_detail if self.user_info.address_detail else ""
+                                         )
+
+        def start_recognize(e):
+            address, address_detail = address_recognition(detail_tf.value)
+            address_tf.value = address
+            self.user_address = address
+            self.user_address_detail = address_detail
+            address_detail_tf.value = address_detail
+            address_tf.update()
+            address_detail_tf.update()
+
+        address_recognize_form = ft.Column(
+            controls=[detail_tf,
+                      address_tf, address_detail_tf,
+                      ft.ElevatedButton(text="智能识别", on_click=lambda e: start_recognize(e))])
+        dialog = ft.AlertDialog(title=ft.Text("地址自动识别"), content=address_recognize_form,
+                                actions=[ft.TextButton("Cancel", on_click=lambda e: self.page.close(dialog))]);
+        self.page.open(dialog)
+
     def build_user_form(self):
         """
         构建用户表单,
         """
         # options
         user_deleter = ft.ElevatedButton(text="删除用户", on_click=self.delete_user)
+        address_analyzer = ft.ElevatedButton(text="地址识别", on_click=self.recognize_address)
         user_deleter.visible = self.update_mode
         # 提交用户信息
         user_submitter = ft.ElevatedButton(text="Submit", on_click=self.submit_user)
         ft_form = ft.Column(horizontal_alignment=CrossAxisAlignment.CENTER,
                             controls=[self.user_avatar, self.user_nick_name, self.user_bilibili_id,
-                                      self.user_birthday, self.user_luna_birthday, self.user_address, self.user_phone,
+                                      self.user_birthday, self.user_luna_birthday, self.user_address,
+                                      self.user_address_detail, self.user_phone,
                                       # 删除用户
-                                      user_deleter,
-                                      user_submitter])
+                                      ft.Row(controls=[user_deleter, address_analyzer, user_submitter])
+                                      ])
         return ft_form
 
     def delete_user(self, e):

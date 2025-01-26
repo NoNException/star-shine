@@ -1,9 +1,11 @@
 import unittest
 
 from app.assets.data_class import Revenue
+from app.config import env_init
 from app.service.captain_service import user_to_birthday
 from app.service.revenue_service import days_gap
 from app.utils.app_utils.excel_utils import write_to_excel
+from app.utils.badu_apis.address_auto_recognize import address_recognition
 from app.utils.bilibili_apis.user_info_fetcher import get_user_details
 from app.utils.daos.login_db import clean_tokens, get_token
 from app.utils.qrcode import create_qrcode
@@ -50,5 +52,10 @@ class UserBirthdayTest(unittest.TestCase):
                 print(f"会员状态: {'是' if details['vip']['status'] == 1 else '否'}")
                 print("-" * 40)
 
-
+    def test_user_address(self):
+        env_init()
+        aa = address_recognition("浙江省杭州市钱塘区新科路02号 粽子 17681870000")
+        address = f"{aa["province"]} {aa['city']} {aa['county']} {aa['town']} {aa['detail']}"
+        self.assertIsNotNone(aa)
+        print(address)
 

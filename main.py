@@ -1,5 +1,10 @@
 import flet as ft
+
+from app.config import env_init
 from app.views.app_layout import AppLayout
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class StarShine(AppLayout):
@@ -30,12 +35,9 @@ def command(e, page):
 
 def main(page: ft.Page):
     # 设置页面标题和布局
+    env_init()
     page.title = "Star Shine"
     page.theme_mode = ft.ThemeMode.SYSTEM
-    # page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
-    # page.vertical_alignment = ft.MainAxisAlignment.START
-    # page.padding = 10
-
     # 加载主页
     home_page = StarShine(page)
     page.add(home_page,
@@ -46,4 +48,5 @@ def main(page: ft.Page):
 
 if __name__ == '__main__':
     # 启动应用
+
     ft.app(target=main)

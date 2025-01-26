@@ -12,6 +12,7 @@ class UserInfo:
     birthday: str = None
     luna_birthday: str = None
     address: str = None
+    address_detail: str = None
     phone: str = None
     days_to_birthday: int = None
 
