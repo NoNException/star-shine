@@ -9,7 +9,7 @@ def env_init():
     ~/langchain_api_key.ini
     ~/segment_api_key
     """
-    with open("app/config.ini", "r") as f:
+    with open("app/app_config", "r") as f:
         for li in f.readlines():
             if li.strip() and "=" in li:
                 env_pairs = li.split("=")

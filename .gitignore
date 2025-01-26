@@ -2,4 +2,4 @@ data/
 __pycache__/
 *.py[cod]
 .idea
-app/config.ini
+app/app_config
