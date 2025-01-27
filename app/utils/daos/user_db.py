@@ -71,7 +71,10 @@ def fetch_users(order_by="id", desc=True,
         f"SELECT * FROM t_user {where_condition}  order by {order_by} {'desc' if desc else ''} limit {limit}"
     df = pd.read_sql_query(sql, conn)
     conn.close()
-    users = [UserInfo(**(row)) for row in df.to_dict(orient='records')]
+    users = [UserInfo(**row) for row in df.to_dict(orient='records')]
+    for u in users:
+        u.cal_days_to_birthday()
+    users = sorted(users)
     return users
 
 

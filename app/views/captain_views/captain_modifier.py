@@ -70,6 +70,11 @@ class UserModifier(ft.Container):
 
         def _setter(birthday):
             birthday_str = birthday.control.value
+            if birthday_str is None or len(birthday_str) == 0:
+                self.user_birthday = None
+                birthday_tf.value = "暂无"
+                birthday_tf.update()
+                return
             try:
                 datetime.strptime(birthday_str, "%m/%d")
                 birthday_tf.error_text = None
@@ -80,7 +85,7 @@ class UserModifier(ft.Container):
                 birthday_tf.value = ""
                 birthday_tf.update()
 
-        birthday_tf = ft.TextField(value=self.user_info.birthday,
+        birthday_tf = ft.TextField(value=self.user_info.birthday if self.user_info.birthday is not None else "暂无",
                                    label="生日(阳历)", hint_text=today_str,
                                    on_blur=lambda e: _setter(e))
         return birthday_tf
@@ -94,6 +99,11 @@ class UserModifier(ft.Container):
 
         def _setter(luna_birthday):
             luna_birthday_str = luna_birthday.control.value
+            if luna_birthday_str is None or len(luna_birthday_str) == 0:
+                self.user_luna_birthday = None
+                luna_birthday_tf.value = "暂无"
+                luna_birthday_tf.update()
+                return
             try:
                 luna_birthday_showing = str4luna(luna_birthday_str)
                 if luna_birthday_showing is None:
@@ -117,7 +127,7 @@ class UserModifier(ft.Container):
                         f"{luna_date.getMonthInChinese()}月/{luna_date.getDayInChinese()}")
             except Exception as e:
                 print(e, "str4luna")
-                return None
+                return "暂无"
 
         def show_luna_number():
             luna_birthday_tf.value = self.user_info.luna_birthday
@@ -167,10 +177,22 @@ class UserModifier(ft.Container):
     @property
     def user_phone(self):
         def _setter(phone):
-            self.user_phone = phone.control.value
+            phone_number = phone.control.value
+            if phone_number.isdigit() and len(phone_number) == 11:
+                phone_tf.error_text = ""
+                self.user_phone = phone.control.value
+                phone_tf.update()
+            else:
+                if len(phone_number) != 11:
+                    phone.control.error_text = "电话号码长度错误"
+                else:
+                    phone_tf.error_text = "电话号码格式错误"
+                phone_tf.update()
 
-        return ft.TextField(label="电话", value=self.user_info.phone if self.user_info.phone else "",
-                            on_blur=lambda e: _setter(e))
+        phone_tf = ft.TextField(label="电话", value=self.user_info.phone if self.user_info.phone else "",
+                                keyboard_type=ft.KeyboardType.NUMBER,
+                                on_blur=lambda e: _setter(e))
+        return phone_tf
 
     @user_phone.setter
     def user_phone(self, phone):
@@ -186,11 +208,19 @@ class UserModifier(ft.Container):
                                          value=self.user_info.address_detail if self.user_info.address_detail else ""
                                          )
 
+        def certain_address(e, _dialog):
+            """
+            确认地址
+            """
+            self.user_address = address_tf.value
+            self.user_address_detail = address_detail_tf.value
+            self.content = self.build_user_form()
+            self.update()
+            self.page.close(_dialog)
+
         def start_recognize(e):
             address, address_detail = address_recognition(detail_tf.value)
             address_tf.value = address
-            self.user_address = address
-            self.user_address_detail = address_detail
             address_detail_tf.value = address_detail
             address_tf.update()
             address_detail_tf.update()
@@ -200,7 +230,7 @@ class UserModifier(ft.Container):
                       address_tf, address_detail_tf,
                       ft.ElevatedButton(text="智能识别", on_click=lambda e: start_recognize(e))])
         dialog = ft.AlertDialog(title=ft.Text("地址自动识别"), content=address_recognize_form,
-                                actions=[ft.TextButton("Cancel", on_click=lambda e: self.page.close(dialog))]);
+                                actions=[ft.TextButton("确定", on_click=lambda e: certain_address(e, dialog))])
         self.page.open(dialog)
 
     def build_user_form(self):

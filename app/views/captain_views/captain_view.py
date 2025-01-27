@@ -1,4 +1,5 @@
 import flet as ft
+from pygments import highlight
 
 from app.assets.data_class import UserInfo
 from app.service.captain_service import load_user_from_excel
@@ -90,9 +91,33 @@ class CaptainUserView(ft.Column):
         self.user_search.close_view()
 
     def handle_change(self, e):
-        user_name = e.data
-        users = fetch_users(fuzz_query=user_name, query_all=True)
-        final_list = [ft.ListTile(title=ft.Text(f"{u.name}"), on_click=self.close_anchor, data=u) for u in users]
+        query_info = e.data
+        users = fetch_users(fuzz_query=query_info, query_all=True)
+
+        def build_user_subtitle(u: UserInfo):
+            full_user = f"{u.bilibili_user_id}/{u.name}/{u.phone}/{u.address}/{u.address_detail}"
+            indices = []
+            start = 0
+            if len(query_info) == 0:
+                return ft.Text(full_user)
+            while True:
+                start = full_user.find(query_info, start)
+                if start == -1:  # 找不到时结束
+                    break
+                indices.append(start)
+                start += len(query_info)  # 从下一个字符继续查找，避免重复
+            highlights_spans = []
+            print(full_user, indices, "????")
+            for i in indices:
+                hi = full_user[i:(i + len(query_info))]
+                highlights_spans.append(
+                    ft.TextSpan(text=".." + hi + "../", style=ft.TextStyle(weight=ft.FontWeight.BOLD))
+                )
+            return ft.Text(spans=highlights_spans)
+
+        final_list = [
+            ft.ListTile(title=ft.Text(f"{u.name}"), subtitle=build_user_subtitle(u), on_click=self.close_anchor, data=u)
+            for u in users]
         final_list.append(ft.ListTile(title=ft.Text("Clear..."), on_click=self.clear_search, data=None))
         self.user_search_lv.controls.clear()
         for f in final_list:
@@ -168,5 +193,3 @@ class CaptainUserView(ft.Column):
         """
         self.user_info_drawer.controls = [UserModifier(self, self.page)]
         self.page.close(self.user_info_drawer)
-
-

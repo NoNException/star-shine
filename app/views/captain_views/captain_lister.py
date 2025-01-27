@@ -56,6 +56,11 @@ class UserListView(ft.Container):
         """
         渲染用户卡片
         """
+
+        def format_day_hint(day_int):
+            print(day_int, user.name, "???")
+            return f"{int(day_int)}天后" if day_int > 1 else f"今天"
+
         return ft.Container(
 
             content=ft.Row(
@@ -67,7 +72,8 @@ class UserListView(ft.Container):
                                     ),
                     ft.Column(
                         alignment=MainAxisAlignment.CENTER,
-                        controls=[ft.Text(user.name), ft.Text(user.birthday)],
+                        controls=[ft.Text(user.name),
+                                  ft.Text(f"{user.showing_birthday}[{format_day_hint(user.days_to_birthday)}]")],
                     ),
                 ],
             ),
