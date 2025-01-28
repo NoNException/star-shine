@@ -70,7 +70,7 @@ def save_revenues(data):
 
 @app_log
 def query_revenues(limit=10, offset=0, order_by="time", order_direction="DESC",
-                   all=0, **filters) -> tuple[
+                   query_all=0, **filters) -> tuple[
     List[Revenue], int]:
     """
     按照条件组合查询直播数据，支持分页和自定义排序。
@@ -89,7 +89,7 @@ def query_revenues(limit=10, offset=0, order_by="time", order_direction="DESC",
     :param limit: 每页条数（默认 10 条）
     :param offset: 偏移量（默认 0，表示第一页）
     :param order_by: 排序字段（默认按 `time` 排序）
-    :param all: 1= 全部导出, 忽略分页参数
+    :param query_all: 1= 全部导出, 忽略分页参数
     :param order_direction: 排序方向，`ASC` 或 `DESC`（默认 `ASC`）
     :return: 查询结果列表
     """
@@ -131,7 +131,7 @@ def query_revenues(limit=10, offset=0, order_by="time", order_direction="DESC",
     # 添加排序条件
     query = query + conditions + f" ORDER BY {order_by} {order_direction}"
 
-    if all == 0:
+    if query_all == 0:
         # 添加分页条件
         query += " LIMIT :limit OFFSET :offset"
         params["limit"] = limit
@@ -144,5 +144,6 @@ def query_revenues(limit=10, offset=0, order_by="time", order_direction="DESC",
     count_query += conditions
     cursor.execute(count_query, params)
     count = cursor.fetchone()
+
     conn.close()
-    return [Revenue(**dict(row)) for row in rows], count
+    return [Revenue(**dict(row)) for row in rows], count[0]

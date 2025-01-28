@@ -5,10 +5,10 @@
 """
 import time
 from cProfile import label
+from itertools import count
 from urllib.parse import quote
 
 import flet as ft
-from openpyxl.workbook import Workbook
 
 from app.assets.data_class import Revenue
 from app.service.revenue_service import bilibili_sync
@@ -17,6 +17,7 @@ from app.utils.app_utils.excel_utils import write_to_excel
 from app.utils.daos.login_db import save_token
 from app.service.bilibili_login_service import parse_login_url, poll_qr_code, generate_qr_code, is_user_need_login
 from app.utils.daos.revenue_db import query_revenues
+from app.views.common_view.pagination import Pagination
 
 
 def to_data_cell(revenue: Revenue):
@@ -50,12 +51,7 @@ class RevenueListPage(ft.Container):
         self.login_dialog = BilibiliLoginDialog(self, page)
         self.page.overlay.append(self.login_dialog)
         # # 收益列表
-        self.revenue_list = ft.DataTable(columns=[
-            ft.DataColumn(ft.Text("Name")),
-            ft.DataColumn(ft.Text("Time")),
-            ft.DataColumn(ft.Text("Gift")),
-            ft.DataColumn(ft.Text("Golds"), numeric=True),
-        ], rows=[], )
+
         self.filters = ft.Row(controls=[
             ft.TextField(label="舰长", width=200),
             ft.TextField(label="时间(S)", width=200),
@@ -72,32 +68,45 @@ class RevenueListPage(ft.Container):
                 f.value = ''
             self.query_revenue()
 
+        cols = [
+            ft.DataColumn(ft.Text("Name")),
+            ft.DataColumn(ft.Text("Time")),
+            ft.DataColumn(ft.Text("Gift")),
+            ft.DataColumn(ft.Text("Golds"), numeric=True),
+        ]
+        _, total_count = self.query_revenue()
+        self.revenue_list = Pagination(page, app=None, row_getter=self.query_revenue, cols=cols,
+                                       total_count=total_count)
+
         self.content = ft.Column(controls=[
             self.filters,
             ft.Row(controls=[
-                ft.OutlinedButton("Export2Excel", on_click=lambda e: self.revenue_export()),
-                ft.OutlinedButton("SyncFormBiliBili", on_click=lambda e: bilibili_sync(
+                ft.OutlinedButton("导出", on_click=lambda e: self.revenue_export()),
+                ft.OutlinedButton("同步", on_click=lambda e: bilibili_sync(
                     self.sync_start_time.value, self.sync_end_time.value
                 )),
-                ft.OutlinedButton("Query", on_click=lambda e: self.query_revenue()),
-                ft.OutlinedButton("Reset", on_click=lambda e: clear_filters()),
+                ft.OutlinedButton("查询", on_click=lambda e: self.query_revenue()),
+                ft.OutlinedButton("重置", on_click=lambda e: clear_filters()),
                 self.sync_start_time, self.sync_end_time
             ]),
             self.revenue_list
         ])
 
+    def did_mount(self):
+        self.revenue_list.update_display()
+
     def close_login_dialog(self):
         self.page.close(self.login_dialog)
         self.login_dialog.open_dialog(False)
 
-    def query_revenue(self, limit=10, offset=0):
-        rows, count = query_revenues(
-            limit=limit,
-            offset=offset,
+    def query_revenue(self, start=0, end=10):
+        rows, total_count = query_revenues(
+            offset=start,
+            limit=end - start,
             **self.build_filter()
         )
-        self.revenue_list.rows = [to_data_cell(r) for r in rows]
-        self.update()
+        print(len(rows), "???", total_count, "????")
+        return [to_data_cell(r) for r in rows], total_count
 
     def did_mount(self):
         print("Running in RevenueListPage")
@@ -138,7 +147,7 @@ class RevenueListPage(ft.Container):
             ft.TextButton(text="Cancel", on_click=close_banner)
         ])
 
-        revenues, count = query_revenues(**self.build_filter(), all=1)
+        revenues, count = query_revenues(**self.build_filter(), query_all=1)
         write_to_excel(file_name, revenues)
         self.page.open(banner)
 
