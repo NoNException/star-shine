@@ -16,8 +16,9 @@ from app.utils.app_utils.common_utils import uuid_getter
 from app.utils.app_utils.excel_utils import write_to_excel
 from app.utils.daos.login_db import save_token
 from app.service.bilibili_login_service import parse_login_url, poll_qr_code, generate_qr_code, is_user_need_login
-from app.utils.daos.revenue_db import query_revenues
+from app.utils.daos.revenue_db import query_revenues, query_miss_days
 from app.views.common_view.pagination import Pagination
+from app.views.revenue_views.revenue_sync_view import RevenueSyncView
 
 
 def to_data_cell(revenue: Revenue):
@@ -77,23 +78,29 @@ class RevenueListPage(ft.Container):
         _, total_count = self.query_revenue()
         self.revenue_list = Pagination(page, app=None, row_getter=self.query_revenue, cols=cols,
                                        total_count=total_count)
-
+        self.sync_bt = ft.OutlinedButton(text="同步", on_click=lambda e: self.open_revenue_sync_dialog())
+        self.sync_dialog = RevenueSyncView(page, self)
         self.content = ft.Column(controls=[
             self.filters,
             ft.Row(controls=[
                 ft.OutlinedButton("导出", on_click=lambda e: self.revenue_export()),
-                ft.OutlinedButton("同步", on_click=lambda e: bilibili_sync(
-                    self.sync_start_time.value, self.sync_end_time.value
-                )),
+                self.sync_bt,
                 ft.OutlinedButton("查询", on_click=lambda e: self.query_revenue()),
-                ft.OutlinedButton("重置", on_click=lambda e: clear_filters()),
-                self.sync_start_time, self.sync_end_time
+                ft.OutlinedButton("重置", on_click=lambda e: clear_filters())
             ]),
             self.revenue_list
         ])
 
     def did_mount(self):
         self.revenue_list.update_display()
+
+    def before_update(self):
+        days = query_miss_days()
+        print("---", days)
+        self.sync_bt.text = f"同步({days}天)"
+
+    def open_revenue_sync_dialog(self):
+        self.page.open(self.sync_dialog)
 
     def close_login_dialog(self):
         self.page.close(self.login_dialog)

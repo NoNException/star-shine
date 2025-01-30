@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Tuple
 
 from app.assets.data_class import Revenue
@@ -147,3 +148,19 @@ def query_revenues(limit=10, offset=0, order_by="time", order_direction="DESC",
 
     conn.close()
     return [Revenue(**dict(row)) for row in rows], count[0]
+
+
+def query_miss_days():
+    """
+    查询最近一次同步收益的时间
+    """
+    sql = "select max(time) from t_revenue"
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    conn.close()
+    if result[0] is None:
+        return 0
+    latest_days = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S')
+    return (datetime.now() - latest_days).days

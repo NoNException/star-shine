@@ -8,6 +8,7 @@ from app.utils.app_utils.excel_utils import write_to_excel
 from app.utils.badu_apis.address_auto_recognize import address_recognition
 from app.utils.bilibili_apis.user_info_fetcher import get_user_details
 from app.utils.daos.login_db import clean_tokens, get_token
+from app.utils.daos.revenue_db import query_miss_days
 from app.utils.qrcode import create_qrcode
 
 
@@ -59,3 +60,7 @@ class UserBirthdayTest(unittest.TestCase):
         self.assertIsNotNone(aa)
         print(address)
 
+    def test_query_miss_days(self):
+        days = query_miss_days()
+        print(days)
+        self.assertIsNotNone(days)

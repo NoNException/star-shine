@@ -2,7 +2,7 @@ import flet as ft
 
 from app.views.captain_views.captain_view import CaptainUserView
 from app.views.navigation import SideBar
-from app.views.revenue_view import RevenueListPage
+from app.views.revenue_views.revenue_view import RevenueListPage
 
 
 class AppLayout(ft.Row):
