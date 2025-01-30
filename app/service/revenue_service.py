@@ -9,38 +9,39 @@ from app.utils.daos.revenue_db import save_revenues, query_revenues
 
 
 @app_log
-def bilibili_sync(start_date, end_date):
+def bilibili_sync(start_date, end_date, day_callback=None, page_callback=None):
     """
     从 bilibili 中同步每日的收益记录
-    :param start_date: 用户名称
+    :param start_date: 搜索的时间范围
     :param end_date: 搜索的时间范围
+    :param day_callback: 每天同步完成后的回调函数
+    :param page_callback: 每页同步完成后的回调函数
     """
     token, _ = get_token()
     revenues = []
-    for day in days_gap([start_date, end_date]):
-        day_revenue = query_revenue_list(day, str(token), )
+    for day in days_gap(start_date, end_date):
+        day_revenue = query_revenue_list(day, str(token), page_callback)
         if len(day_revenue) == 0:
             continue
+        if day_callback is not None:
+            day_callback(day, day_revenue)
         revenues.extend(day_revenue)
         save_revenues(day_revenue)
 
 
 @app_log
-def days_gap(date_range: List[str]):
+def days_gap(start_date, end_date) -> List[datetime]:
     """
     返回两个时间字符串的天数, 默认date_range[0]  早于 date_range[1]
-    :param date_range: 时间范围
+    :param start_date: 开始时间
+    :param end_date: 结束时间
     return:  日期
     """
-    date_format = "%Y-%m-%d"
-
-    start_date = datetime.strptime(date_range[0], date_format)
-    end_date = datetime.strptime(date_range[1], date_format) if date_range[1] else datetime.today()
-    date_lists = [end_date.date()]
+    days = [end_date.date()]
     while start_date < end_date:
         end_date -= timedelta(days=1)
-        date_lists.append(end_date)
-    return date_lists
+        days.append(end_date)
+    return days
 
 
 def query_miss_day():
