@@ -39,7 +39,8 @@ class UserInfo:
     def to_luna_date(date):
         today_luna = Lunar.fromDate(datetime.today())
         luna_year = today_luna.getYear()
-        if date.month <= abs(today_luna.getMonth()) and date.day < abs(today_luna.getDay()):
+        if date.month < abs(today_luna.getMonth()) or (
+                date.month == abs(today_luna.getMonth()) and date.day < abs(today_luna.getDay())):
             luna_year = today_luna.getYear() + 1
         # 设置今年的农历
         lunar_date = Lunar.fromYmd(lunar_year=luna_year, lunar_month=date.month, lunar_day=date.day)
@@ -71,7 +72,7 @@ class UserInfo:
         solar_date = self.str2date(self.birthday)
         birthday_gaps = days_to_date(solar_date)
         luna_date = self.str2date(self.luna_birthday)
-        luna_birthday_gaps = days_to_date(self.lua_date2solar_date(luna_date))
+        luna_birthday_gaps = days_to_date(self.lua_date2solar_date(luna_date), cal_year=True)
 
         target_date = min(birthday_gaps or luna_birthday_gaps, luna_birthday_gaps or birthday_gaps)
         if target_date == luna_birthday_gaps:
@@ -89,11 +90,13 @@ class UserInfo:
         return self.days_to_birthday <= other.days_to_birthday
 
 
-def days_to_date(date):
+def days_to_date(date, cal_year=False):
     today = datetime.today()
     if date is None:
         return None
-    if date.month <= today.month and date.day < today.day:
+    if cal_year:
+        return (date - today).days + 1.1
+    if date.month < today.month or (date.month == today.month and date.day < today.day):
         return (date.replace(year=today.year + 1) - today).days + 1.1
     else:
         return (date.replace(year=today.year) - today).days + 1.1

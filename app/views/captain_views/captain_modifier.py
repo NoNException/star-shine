@@ -308,7 +308,6 @@ class UserModifier(ft.Container):
         打开日期选择器
         mode: birthday 公历日期
               luna_birthday 阴历日期
-
         """
         self.date_picker_mode = mode
         self.page.open(self.date_picker)

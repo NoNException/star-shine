@@ -66,6 +66,7 @@ class CaptainUserView(ft.Column):
         self.user_info_drawer = ft.NavigationDrawer(
             position=ft.NavigationDrawerPosition.END,
             controls=[UserModifier(self, self.page, user_info=None)],
+
         )
         self.user_list = UserListView(self, fetch_users(query_all=True))
 
@@ -192,4 +193,5 @@ class CaptainUserView(ft.Column):
         关闭抽屉
         """
         self.user_info_drawer.controls = [UserModifier(self, self.page)]
+        self.user_list.apply_filter()
         self.page.close(self.user_info_drawer)
