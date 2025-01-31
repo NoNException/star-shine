@@ -30,13 +30,12 @@ def get_gift_types():
 
 
 @app_log
-def query_revenue_list(date, session_data: str, page_size=20, page_callback=None):
+def query_revenue_list(date, session_data: str, page_size=20):
     """
     调取 bilibili 的接口, 必须制定天数
     :param date: 需要查询的日期
     :param session_data: session_data
     :param page_size: 每页查询数量
-    :param page_callback: 每页查询完成后的回调函数
     return: 礼物列表
     """
     param = {
@@ -55,8 +54,6 @@ def query_revenue_list(date, session_data: str, page_size=20, page_callback=None
                 raise Error(f"Query error {page_number} with param:{param}, resp:{rep.content}")
             data = rep.json()["data"]
             entries.extend(data["list"])
-            if page_callback is not None:
-                page_callback(page_number, data)
             if not data["list"] or not data.get("has_more"):
                 # 未查到数据
                 break

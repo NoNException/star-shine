@@ -72,7 +72,7 @@ class RevenueListPage(ft.Container):
         self.revenue_list = Pagination(page, app=None, row_getter=self.query_revenue, cols=cols,
                                        total_count=total_count)
         self.sync_bt = ft.OutlinedButton(text="同步", on_click=lambda e: self.open_revenue_sync_dialog())
-        self.sync_dialog = RevenueSyncView(page, self)
+        self.sync_dialog = RevenueSyncView(page, self, query_miss_days(), on_dismiss=lambda e: self.close_revenue_dialog(e))
         self.content = ft.Column(controls=[
             self.filters,
             ft.Row(controls=[
@@ -84,12 +84,22 @@ class RevenueListPage(ft.Container):
             self.revenue_list
         ])
 
+    def close_revenue_dialog(self, e):
+        """
+        清理 dialog
+        """
+        self.sync_dialog.clean_controllers()
+        self.revenue_list.update_display()
+        self.update()
+
     def before_update(self):
         days = query_miss_days()
         self.sync_bt.text = f"同步({days}天)"
 
     def open_revenue_sync_dialog(self):
+        self.sync_dialog.miss_days = query_miss_days()
         self.page.open(self.sync_dialog)
+        pass
 
     def close_login_dialog(self):
         self.page.close(self.login_dialog)

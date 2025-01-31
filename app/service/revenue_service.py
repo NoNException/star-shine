@@ -9,24 +9,21 @@ from app.utils.daos.revenue_db import save_revenues, query_revenues
 
 
 @app_log
-def bilibili_sync(start_date, end_date, day_callback=None, page_callback=None):
+def bilibili_sync(day, day_callback=None):
     """
     从 bilibili 中同步每日的收益记录
-    :param start_date: 搜索的时间范围
-    :param end_date: 搜索的时间范围
+    :param day: 搜索的时间范围
     :param day_callback: 每天同步完成后的回调函数
     :param page_callback: 每页同步完成后的回调函数
     """
     token, _ = get_token()
     revenues = []
-    for day in days_gap(start_date, end_date):
-        day_revenue = query_revenue_list(day, str(token), page_callback)
-        if len(day_revenue) == 0:
-            continue
-        if day_callback is not None:
-            day_callback(day, day_revenue)
+    day_revenue = query_revenue_list(day, str(token))
+    if len(day_revenue) != 0:
         revenues.extend(day_revenue)
         save_revenues(day_revenue)
+    if day_callback is not None:
+        day_callback(day, day_revenue)
 
 
 @app_log

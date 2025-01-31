@@ -152,7 +152,7 @@ def query_revenues(limit=10, offset=0, order_by="time", order_direction="DESC",
 
 def query_miss_days():
     """
-    查询最近一次同步收益的时间
+    查询最近一次同步收益的时间, 最多为最近 30 天
     """
     sql = "select max(time) from t_revenue"
     conn = sqlite3.connect(DATABASE_PATH)
@@ -163,4 +163,4 @@ def query_miss_days():
     if result[0] is None:
         return 0
     latest_days = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S')
-    return (datetime.now() - latest_days).days
+    return (datetime.now() - latest_days).days if latest_days is not None else 30
