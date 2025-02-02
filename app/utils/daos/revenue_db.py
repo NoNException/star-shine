@@ -164,3 +164,17 @@ def query_miss_days():
         return 0
     latest_days = datetime.strptime(result[0], '%Y-%m-%d %H:%M:%S')
     return (datetime.now() - latest_days).days if latest_days is not None else 30
+
+
+def query_count_by_month(month: str):
+    """
+    查询每个月份的收益数据
+    :param month: 月份，格式为 'YYYY-MM'
+    """
+    sql = "select count(1),sum(gold), count(distinct uid) from t_revenue where strftime('%Y年%m月', time) = :month"
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute(sql, {"month": month})
+    result = cursor.fetchone()
+    conn.close()
+    return result[0], result[1] if result[1] is not None else 0, result[2]

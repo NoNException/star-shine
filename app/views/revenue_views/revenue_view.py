@@ -7,12 +7,13 @@
 import flet as ft
 
 from app.assets.data_class import Revenue
-from app.utils.app_utils.common_utils import uuid_getter
+from app.utils.app_utils.common_utils import uuid_getter, app_log
 from app.utils.app_utils.excel_utils import write_to_excel
 from app.service.bilibili_login_service import is_user_need_login
 from app.utils.daos.revenue_db import query_revenues, query_miss_days
 from app.views.common_view.login import BilibiliLoginDialog
 from app.views.common_view.pagination import Pagination
+from app.views.revenue_views.revenue_export_view import RevenueExportDialog
 from app.views.revenue_views.revenue_sync_view import RevenueSyncView
 
 
@@ -55,6 +56,7 @@ class RevenueListPage(ft.Container):
             ft.TextField(label="收益(S)", width=200),
             ft.TextField(label="收益(E)", width=200),
         ])
+
         # if self.filters can't query any revenues, show's bilibili query dialog
 
         def clear_filters():
@@ -71,18 +73,27 @@ class RevenueListPage(ft.Container):
         _, total_count = self.query_revenue()
         self.revenue_list = Pagination(page, app=None, row_getter=self.query_revenue, cols=cols,
                                        total_count=total_count)
+        self.export_bt = ft.OutlinedButton("导出", on_click=lambda e: self.page.open(self.export_dialog))
+        self.export_dialog = RevenueExportDialog(page, self, on_dismiss=lambda e: self.close_export_dialog(e))
         self.sync_bt = ft.OutlinedButton(text="同步", on_click=lambda e: self.open_revenue_sync_dialog())
-        self.sync_dialog = RevenueSyncView(page, self, query_miss_days(), on_dismiss=lambda e: self.close_revenue_dialog(e))
+        self.sync_dialog = RevenueSyncView(page, self, query_miss_days(),
+                                           on_dismiss=lambda e: self.close_revenue_dialog(e))
         self.content = ft.Column(controls=[
             self.filters,
             ft.Row(controls=[
-                ft.OutlinedButton("导出", on_click=lambda e: self.revenue_export()),
+                self.export_bt,
                 self.sync_bt,
                 ft.OutlinedButton("查询", on_click=lambda e: self.query_revenue()),
                 ft.OutlinedButton("重置", on_click=lambda e: clear_filters())
             ]),
             self.revenue_list
         ])
+
+    @app_log
+    def close_export_dialog(self, e):
+        print("Close Export Dialog...", e)
+        self.export_dialog.clean_close(None)
+        self.update()
 
     def close_revenue_dialog(self, e):
         """
@@ -97,7 +108,7 @@ class RevenueListPage(ft.Container):
         self.sync_bt.text = f"同步({days}天)"
 
     def open_revenue_sync_dialog(self):
-        self.sync_dialog.miss_days = query_miss_days()
+        self.sync_dialog.miss_days = query_miss_days() - 1
         self.page.open(self.sync_dialog)
         pass
 
@@ -135,23 +146,5 @@ class RevenueListPage(ft.Container):
             "max_gold": filter_values[4],
             # "gift_name": filter_values[4],
         }
-
-    def revenue_export(self):
-        """
-        导出符合条件的 excel 文件
-        """
-
-        file_name = f"{uuid_getter()}.xlsx"
-
-        def close_banner(e):
-            self.page.close(banner)
-
-        banner = ft.Banner(content=ft.Text(f"Exported to {file_name}"), actions=[
-            ft.TextButton(text="Cancel", on_click=close_banner)
-        ])
-
-        revenues, count = query_revenues(**self.build_filter(), query_all=1)
-        write_to_excel(file_name, revenues)
-        self.page.open(banner)
 
 

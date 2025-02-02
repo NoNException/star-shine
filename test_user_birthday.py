@@ -10,6 +10,7 @@ from app.utils.bilibili_apis.user_info_fetcher import get_user_details
 from app.utils.daos.login_db import clean_tokens, get_token
 from app.utils.daos.revenue_db import query_miss_days
 from app.utils.qrcode import create_qrcode
+from app.views.revenue_views.revenue_export_view import get_last_12_months
 
 
 class UserBirthdayTest(unittest.TestCase):
@@ -64,3 +65,8 @@ class UserBirthdayTest(unittest.TestCase):
         days = query_miss_days()
         print(days)
         self.assertIsNotNone(days)
+
+    def test_get_recent_12_month_str(self):
+        recent_12_month_str = get_last_12_months()
+        self.assertIsNotNone(recent_12_month_str)
+        print(recent_12_month_str)
