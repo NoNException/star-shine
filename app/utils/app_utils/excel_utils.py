@@ -1,6 +1,9 @@
 from openpyxl.workbook import Workbook
 
+from app.utils.app_utils.common_utils import app_log
 
+
+@app_log
 def write_to_excel(file_name, data_list, headers=None):
     """
     将对象列表写入 Excel 文件

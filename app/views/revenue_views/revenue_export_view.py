@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import flet as ft
 
+from app.utils.app_utils.common_utils import uuid_getter
 from app.utils.app_utils.excel_utils import write_to_excel
 from app.utils.daos.revenue_db import query_count_by_month, query_revenues
 
@@ -13,7 +14,7 @@ class RevenueExportDialog(ft.AlertDialog):
         self.page = page
         self.parent = parent
         self.title = ft.Text("Export Revenue")
-        self.export_ob = ft.TextButton(text="开始导出", disabled=True, on_click=self.export)
+        self.export_ob = ft.TextButton(text="开始导出", disabled=True, on_click=lambda e: self.revenue_export(e))
         self.actions = [
             self.export_ob,
             ft.TextButton("Close", on_click=self.clean_close)
@@ -22,7 +23,7 @@ class RevenueExportDialog(ft.AlertDialog):
                                           options=[ft.dropdown.Option(rm) for rm in
                                                    list(reversed(get_last_12_months()))],
                                           on_change=lambda e: self.show_export_ob(e))
-        self.showing_panel = ft.Container()
+        self.showing_panel = ft.Column()
         self.content = ft.Column(controls=[ft.Text("选择月份进行导出"),
                                            ft.Row(
                                                controls=[ft.Text("导出"), self.month_dropdown, ft.Text("收益数据")]),
@@ -30,26 +31,27 @@ class RevenueExportDialog(ft.AlertDialog):
                                            ],
                                  width=self.page.width / 3)
 
-    def revenue_export(self):
+    def revenue_export(self, e):
         """
         导出符合条件的 excel 文件
         """
+        user_month = self.month_dropdown.value
+        file_name = f"{user_month}-收益数据.xlsx"
 
-        file_name = f"{uuid_getter()}.xlsx"
-
-        def close_banner(e):
-            self.page.close(banner)
-
-        banner = ft.Banner(content=ft.Text(f"Exported to {file_name}"), actions=[
-            ft.TextButton(text="Cancel", on_click=close_banner)
-        ])
-
-        revenues, count = query_revenues(**self.build_filter(), query_all=1)
+        user_month = self.month_dropdown.value
+        start_time = datetime.strptime(user_month, "%Y年%m月").replace(day=1)
+        # 获取下个月的第一天
+        end_time = (start_time + timedelta(days=32)).replace(day=1)
+        revenues, count = query_revenues({
+            "start_time": start_time,
+            "end_time": end_time,
+        }, query_all=1)
         write_to_excel(file_name, revenues)
-        self.page.open(banner)
+        self.showing_panel.controls.append(ft.Text(f"😄导出成功, 文件名为{file_name}"))
+        self.showing_panel.update()
 
     def clean_close(self, e):
-        self.showing_panel.content = ft.Text()
+        self.showing_panel.controls.clear()
         self.month_dropdown.value = ""
         self.page.close(self)
 
@@ -57,8 +59,8 @@ class RevenueExportDialog(ft.AlertDialog):
         self.export_ob.disabled = False
         print("User has choose ", e.data)
         re_cnt, gold_sum, user_cnt = query_count_by_month(e.data)
-        self.showing_panel.content = ft.Text(
-            f"你已经勾选了导出{e.data}数据, 该月共有{re_cnt}条收益记录，{gold_sum}金币，{user_cnt}用户, 确认导出?")
+        self.showing_panel.controls.append(ft.Text(
+            f"你已经勾选了导出{e.data}数据, 该月共有{re_cnt}条收益记录，{gold_sum}金币，{user_cnt}用户, 确认导出?"))
         self.update()
 
 

@@ -7,8 +7,7 @@
 import flet as ft
 
 from app.assets.data_class import Revenue
-from app.utils.app_utils.common_utils import uuid_getter, app_log
-from app.utils.app_utils.excel_utils import write_to_excel
+from app.utils.app_utils.common_utils import app_log
 from app.service.bilibili_login_service import is_user_need_login
 from app.utils.daos.revenue_db import query_revenues, query_miss_days
 from app.views.common_view.login import BilibiliLoginDialog
