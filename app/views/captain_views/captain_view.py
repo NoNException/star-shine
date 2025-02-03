@@ -31,9 +31,6 @@ class CaptainUserView(ft.Column):
         page.overlay.append(file_picker)
         self.file_list = ft.Row(alignment=ft.MainAxisAlignment.START)
 
-        def handle_submit(e):
-            print(f"handle_submit e.data: {e.data}")
-
         def handle_tap(e):
             self.user_search.open_view()
 
@@ -43,7 +40,6 @@ class CaptainUserView(ft.Column):
             bar_hint_text="Search Users...",
             view_hint_text="Choose a user from the suggestions...",
             on_change=self.handle_change,
-            on_submit=handle_submit,
             on_tap=handle_tap,
             controls=[self.user_search_lv]
         )
@@ -82,7 +78,7 @@ class CaptainUserView(ft.Column):
         ]
 
     # User Search Actions
-    def close_anchor(self, e):
+    def close_searchbar_controls(self, e):
         """
         关闭抽屉
         """
@@ -108,7 +104,6 @@ class CaptainUserView(ft.Column):
                 indices.append(start)
                 start += len(query_info)  # 从下一个字符继续查找，避免重复
             highlights_spans = []
-            print(full_user, indices, "????")
             for i in indices:
                 hi = full_user[i:(i + len(query_info))]
                 highlights_spans.append(
@@ -117,7 +112,7 @@ class CaptainUserView(ft.Column):
             return ft.Text(spans=highlights_spans)
 
         final_list = [
-            ft.ListTile(title=ft.Text(f"{u.name}"), subtitle=build_user_subtitle(u), on_click=self.close_anchor, data=u)
+            ft.ListTile(title=ft.Text(f"{u.name}"), subtitle=build_user_subtitle(u), on_click=self.close_searchbar_controls, data=u)
             for u in users]
         final_list.append(ft.ListTile(title=ft.Text("Clear..."), on_click=self.clear_search, data=None))
         self.user_search_lv.controls.clear()
@@ -137,7 +132,7 @@ class CaptainUserView(ft.Column):
 
     def query_base_user(self):
         users = fetch_users(order_by="name", desc=True, limit=7)
-        final_list = [ft.ListTile(title=ft.Text(f"{u.name}"), on_click=self.close_anchor, data=u) for u in users]
+        final_list = [ft.ListTile(title=ft.Text(f"{u.name}"), on_click=self.close_searchbar_controls, data=u) for u in users]
         final_list.append(ft.ListTile(title=ft.Text("Clear..."), on_click=self.clear_search, data=None))
         return final_list
 

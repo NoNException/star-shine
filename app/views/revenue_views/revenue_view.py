@@ -1,149 +1,121 @@
-"""
-# 收益列表
-# 2. Revenue List Page
-# 3. Save Revenue into db if user's token is valid
-"""
-
 import flet as ft
 
-from app.assets.data_class import Revenue
-from app.utils.app_utils.common_utils import app_log
-from app.service.bilibili_login_service import is_user_need_login
-from app.utils.daos.revenue_db import query_revenues, query_miss_days
-from app.views.common_view.login import BilibiliLoginDialog
-from app.views.common_view.pagination import Pagination
-from app.views.revenue_views.revenue_export_view import RevenueExportDialog
-from app.views.revenue_views.revenue_sync_view import RevenueSyncView
 
+def main(page: ft.Page):
+    page.title = "使用ListView实现搜索历史 + 热搜(可点击)"
+    page.vertical_alignment = ft.MainAxisAlignment.START
 
-def to_data_cell(revenue: Revenue):
-    """
-    将数据转换为DataCell
+    # -------------------------
+    # 1. 模拟本地“搜索历史”和“热搜”
+    # -------------------------
+    search_history_data = []
+    trending_data = []
 
-    Args:
-        revenue (Revenue): _description_
-    Return:
-        将用户信息
-    """
-    print(revenue)
-    return ft.DataRow(
-        cells=[
-            ft.DataCell(ft.Text(revenue.uname)),
-            ft.DataCell(ft.Text(revenue.time)),
-            ft.DataCell(ft.Text(f"{revenue.gift_num}/{revenue.gift_name}")),
-            ft.DataCell(ft.Text(revenue.gold)),
-        ],
+    # -------------------------
+    # 2. 创建 ListView
+    #    - 将“搜索历史”、“清空历史”、“热搜”等统统放在同一个 ListView 中
+    # -------------------------
+    list_view = ft.ListView(
+        spacing=5,
+        padding=10,
     )
 
+    # 为了方便后续更新，先把 list_view 加到页面
+    page.add(list_view)
 
-class RevenueListPage(ft.Container):
-    """
-    扫码对话框
-    """
-
-    def __init__(self, page: ft.Page):
-        super().__init__()
-        self.page = page
-        self.login_dialog = BilibiliLoginDialog(self, page)
-        self.page.overlay.append(self.login_dialog)
-        # # 收益列表
-
-        self.filters = ft.Row(controls=[
-            ft.TextField(label="舰长", width=200),
-            ft.TextField(label="时间(S)", width=200),
-            ft.TextField(label="时间(E)", width=200),
-            ft.TextField(label="收益(S)", width=200),
-            ft.TextField(label="收益(E)", width=200),
-        ])
-
-        # if self.filters can't query any revenues, show's bilibili query dialog
-
-        def clear_filters():
-            for f in self.filters.controls:
-                f.value = ''
-            self.query_revenue()
-
-        cols = [
-            ft.DataColumn(ft.Text("Name")),
-            ft.DataColumn(ft.Text("Time")),
-            ft.DataColumn(ft.Text("Gift")),
-            ft.DataColumn(ft.Text("Golds"), numeric=True),
-        ]
-        _, total_count = self.query_revenue()
-        self.revenue_list = Pagination(page, app=None, row_getter=self.query_revenue, cols=cols,
-                                       total_count=total_count)
-        self.export_bt = ft.OutlinedButton("导出", on_click=lambda e: self.page.open(self.export_dialog))
-        self.export_dialog = RevenueExportDialog(page, self, on_dismiss=lambda e: self.close_export_dialog(e))
-        self.sync_bt = ft.OutlinedButton(text="同步", on_click=lambda e: self.open_revenue_sync_dialog())
-        self.sync_dialog = RevenueSyncView(page, self, query_miss_days(),
-                                           on_dismiss=lambda e: self.close_revenue_dialog(e))
-        self.content = ft.Column(controls=[
-            self.filters,
-            ft.Row(controls=[
-                self.export_bt,
-                self.sync_bt,
-                ft.OutlinedButton("查询", on_click=lambda e: self.query_revenue()),
-                ft.OutlinedButton("重置", on_click=lambda e: clear_filters())
-            ]),
-            self.revenue_list
-        ])
-
-    @app_log
-    def close_export_dialog(self, e):
-        print("Close Export Dialog...", e)
-        self.export_dialog.clean_close(None)
-        self.update()
-
-    def close_revenue_dialog(self, e):
+    # -------------------------
+    # 3. 构建 ListView 的内容
+    # -------------------------
+    def build_list_view():
         """
-        清理 dialog
+        重建ListView内部所有条目：
+          - 搜索历史标题
+          - 历史条目（可点击）
+          - 清空历史
+          - 分割线
+          - 热搜标题
+          - 热搜条目（可点击）
         """
-        self.sync_dialog.clean_controllers()
-        self.revenue_list.update_display()
-        self.update()
+        list_view.controls.clear()
 
-    def before_update(self):
-        days = query_miss_days()
-        self.sync_bt.text = f"同步({days}天)"
-
-    def open_revenue_sync_dialog(self):
-        self.sync_dialog.miss_days = query_miss_days() - 1
-        self.page.open(self.sync_dialog)
-        pass
-
-    def close_login_dialog(self):
-        self.page.close(self.login_dialog)
-        self.login_dialog.open_dialog(False)
-
-    def query_revenue(self, start=0, end=10):
-        rows, total_count = query_revenues(
-            offset=start,
-            limit=end - start,
-            **self.build_filter()
+        # 3.1 搜索历史标题
+        list_view.controls.append(
+            ft.ListTile(
+                title=ft.Text("搜索历史", weight=ft.FontWeight.BOLD),
+                # 点击标题本身一般没啥操作，这里留空
+            )
         )
-        return [to_data_cell(r) for r in rows], total_count
 
-    def did_mount(self):
-        if is_user_need_login():
-            # 打开登录页面
-            self.login_dialog.open_dialog(True)
-            self.page.open(self.login_dialog)
-        else:
-            # 获取最新的收益列表
-            self.revenue_list.update_display()
+        # 3.2 搜索历史条目
+        for item in search_history_data:
+            list_view.controls.append(
+                ft.ListTile(
+                    title=ft.Text(item),
+                    on_click=lambda e, kw=item: on_history_item_click(kw)
+                )
+            )
 
-    def build_filter(self):
-        """
-        构建 values , 用于查询收益列表
-        """
-        filter_values = [None if c.value == '' else c.value for c in self.filters.controls]
-        return {
-            "uname": filter_values[0],
-            "start_time": filter_values[1],
-            "end_time": filter_values[2],
-            "min_gold": filter_values[3],
-            "max_gold": filter_values[4],
-            # "gift_name": filter_values[4],
-        }
+        # 3.3 清空历史
+        list_view.controls.append(
+            ft.ListTile(
+                title=ft.Text("清空历史", color=ft.colors.RED_400),
+                on_click=lambda e: clear_search_history()
+            )
+        )
+
+        # 3.4 分割线
+        list_view.controls.append(
+            ft.Divider(height=1, thickness=1, color=ft.colors.BLACK12)
+        )
+
+        # 3.5 热搜标题
+        list_view.controls.append(
+            ft.ListTile(
+                title=ft.Text("热搜", weight=ft.FontWeight.BOLD),
+            )
+        )
+
+        # 3.6 热搜条目
+        for item in trending_data:
+            list_view.controls.append(
+                ft.ListTile(
+                    title=ft.Text(item),
+                    on_click=lambda e, kw=item: on_trending_item_click(kw)
+                )
+            )
+
+        # 刷新页面
+        page.update()
+
+    # -------------------------
+    # 4. 点击逻辑
+    # -------------------------
+    def on_history_item_click(keyword):
+        """点击历史记录后，做一些逻辑处理"""
+        print(f"[历史] 你点击了：{keyword}")
+        # 这里你可以执行搜索，或跳转页面等
+
+    def on_trending_item_click(keyword):
+        """点击热搜后，做一些逻辑处理"""
+        print(f"[热搜] 你点击了：{keyword}")
+        # 这里你可以执行搜索，或跳转页面等
+
+    def clear_search_history():
+        """清空历史"""
+        search_history_data.clear()
+        build_list_view()
+
+    # -------------------------
+    # 5. 首次渲染
+    # -------------------------
+    build_list_view()
+
+    # -------------------------
+    # 6. 如果有需要，可以在后续再更新 list_view
+    #    例如动态增加搜索历史条目，或更新热搜等。
+    # -------------------------
 
 
+# 启动 Flet 应用
+if __name__ == "__main__":
+    ft.app(target=main)
